@@ -3,64 +3,30 @@
   "subtitle": "Sites, projects and saved artifacts in one place",
   "items": [
     {
-      "title": "Notes artifact",
-      "url": "https://example.com/notes",
+      "title": "Lovec kariet",
+      "url": "https://claude.ai/artifact/51ZDysfCmpp5sviNDam2t8",
       "type": "artifact",
-      "description": "A saved Claude artifact",
+      "description": "Card-collecting game: buy packs, open them and fill your album (Slovak)",
       "tags": [
-        "notes"
+        "games",
+        "kids",
+        "slovak"
       ],
       "host": "Claude artifact",
-      "created": "2026-10-28",
-      "pinned": true
+      "created": "2026-11-16"
     },
     {
-      "title": "Portfolio",
-      "url": "https://example.com",
-      "type": "site",
-      "description": "Personal landing page",
+      "title": "Hainburg – Arbeitsblätter",
+      "url": "https://claude.ai/artifact/U8DXLgErFaZZtLNrShUYXH",
+      "type": "artifact",
+      "description": "Fill-in-the-gap worksheets on Hainburg's history, with answers (German)",
       "tags": [
-        "personal"
+        "school",
+        "history",
+        "german"
       ],
-      "host": "GitHub Pages",
-      "repo": "https://github.com/your-username/portfolio",
-      "created": "2026-03-02",
-      "pinned": true
-    },
-    {
-      "title": "Budget tracker",
-      "url": "https://example.com/budget",
-      "type": "project",
-      "description": "Small Next.js app for monthly spending",
-      "tags": [
-        "finance",
-        "tool"
-      ],
-      "host": "Vercel",
-      "created": "2026-05-14"
-    },
-    {
-      "title": "Pomodoro timer",
-      "url": "https://example.com/pomodoro",
-      "type": "site",
-      "description": "Single-file focus timer",
-      "tags": [
-        "tool"
-      ],
-      "host": "GitHub Pages",
-      "created": "2026-01-20"
-    },
-    {
-      "title": "Old weather widget",
-      "url": "https://example.com/weather",
-      "type": "project",
-      "description": "First experiment with a weather API",
-      "tags": [
-        "experiment"
-      ],
-      "host": "Netlify",
-      "created": "2025-09-11",
-      "archived": true
+      "host": "Claude artifact",
+      "created": "2026-11-16"
     }
   ]
 }
