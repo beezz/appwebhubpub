@@ -46,10 +46,13 @@ td .skt{display:block;font-size:.78rem;color:var(--muted)}
 .sec{border-top:2px dashed var(--line);padding:12px 0 6px}
 .sec h3{margin:0 0 8px;font-size:1rem;font-weight:900;color:var(--accent2)}
 .sec h3 small{color:var(--muted);font-weight:700}
-.aux{display:flex;gap:10px;margin-bottom:8px}
+.auxbox{background:var(--soft);border:2px dashed #f3c98f;border-radius:16px;padding:8px 10px 10px;margin:0 auto;max-width:260px}
+.aux{display:flex;gap:10px}
+.mini{margin:0 0 6px;font-size:.8rem;font-weight:700;color:var(--muted);text-align:center}
+.plus{text-align:center;font-size:1.3rem;font-weight:900;color:var(--accent);line-height:1;margin:6px 0 2px}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .opt{font:inherit;font-size:1.1rem;font-weight:900;padding:12px 4px;border-radius:14px;border:3px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--line)}
-.aux .opt{flex:1;padding:8px 4px}
+.aux .opt{flex:1;padding:8px 4px;border-radius:999px}
 .opt.sel{border-color:var(--accent2);background:#e8f0fc}
 .opt.right{border-color:var(--good);background:#e4f6ea;color:#18693a}
 .opt.wrong{border-color:var(--bad);background:#fde7e5;color:#9b2a22}
@@ -128,8 +131,13 @@ th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
     <!-- Auswählen -->
     <div id="pickArea">
       <div class="sec"><h3>Mitvergangenheit</h3><div class="opts" id="oMv"></div></div>
-      <div class="sec"><h3>Vergangenheit <small>– hat oder ist?</small></h3>
-        <div class="aux" id="oAux"></div>
+      <div class="sec"><h3>Vergangenheit</h3>
+        <div class="auxbox">
+          <p class="mini">① hat oder ist?</p>
+          <div class="aux" id="oAux"></div>
+        </div>
+        <div class="plus">+</div>
+        <p class="mini">② Welches Wort?</p>
         <div class="opts" id="oVg"></div>
       </div>
       <div class="sec"><h3>Zukunft</h3><div class="opts" id="oZk"></div></div>
