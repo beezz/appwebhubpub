@@ -29,6 +29,20 @@
       "host": "This site",
       "created": "2026-11-16",
       "icon": "apps/entdecke-hainburg/icon.jpg"
+    },
+    {
+      "title": "Unregelmäßige Zeitwörter",
+      "url": "apps/unregelmaessige-zeitwoerter/",
+      "type": "artifact",
+      "description": "Spaced-repetition flashcards for 26 irregular verbs: Mitvergangenheit, Vergangenheit, Zukunft, with Slovak translations (German)",
+      "tags": [
+        "school",
+        "kids",
+        "german"
+      ],
+      "host": "This site",
+      "created": "2026-11-18",
+      "icon": "📚"
     }
   ]
 }

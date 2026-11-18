@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unregelmäßige Zeitwörter – Lernkartei</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff8ec; --card:#ffffff; --ink:#2b2a33; --muted:#7a7685;
+  --accent:#ff8a1f; --accent2:#3a7bd5; --good:#27a35a; --bad:#e0453a;
+  --line:#efe4d2; --soft:#fff1dc;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif}
+body{min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:520px;padding:18px 16px 40px}
+h1{font-size:1.35rem;margin:4px 0 2px;font-weight:900}
+.sub{color:var(--muted);margin:0 0 16px;font-size:.95rem}
+.panel{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 2px 0 var(--line),0 6px 24px rgba(0,0,0,.05);margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.chip{flex:1;min-width:90px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 8px;font:inherit;font-weight:700;cursor:pointer;color:var(--ink)}
+.chip.on{border-color:var(--accent);background:var(--soft)}
+.label{font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.big{display:block;width:100%;border:0;border-radius:16px;padding:16px;font:inherit;font-size:1.15rem;font-weight:900;cursor:pointer;color:#fff;background:var(--accent);box-shadow:0 4px 0 #d86c0a}
+.big:active{transform:translateY(2px);box-shadow:0 2px 0 #d86c0a}
+.big.blue{background:var(--accent2);box-shadow:0 4px 0 #2a5ca3}
+.big.green{background:var(--good);box-shadow:0 4px 0 #1b7a42}
+.big.red{background:var(--bad);box-shadow:0 4px 0 #a92e25}
+.big:disabled{opacity:.45;cursor:default}
+.ghost{background:none;border:0;color:var(--accent2);font:inherit;font-weight:700;cursor:pointer;padding:8px}
+.stats{display:flex;gap:10px;text-align:center}
+.stat{flex:1;background:var(--soft);border-radius:14px;padding:10px 6px}
+.stat b{display:block;font-size:1.5rem;font-weight:900}
+.stat span{font-size:.78rem;color:var(--muted);font-weight:700}
+.progress{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+.progress div{height:100%;background:var(--accent);width:0;transition:width .3s}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.verb{font-size:2.2rem;font-weight:900;text-align:center;margin:4px 0 0}
+.sk{text-align:center;font-size:1.05rem;color:var(--accent);font-weight:700;margin:0 0 4px}
+.sk::before{content:"🇸🇰 "}
+td .skt{display:block;font-size:.78rem;color:var(--muted)}
+.ask{text-align:center;font-size:.95rem;color:var(--muted);margin-bottom:14px}
+
+.sec{border-top:2px dashed var(--line);padding:12px 0 6px}
+.sec h3{margin:0 0 8px;font-size:1rem;font-weight:900;color:var(--accent2)}
+.sec h3 small{color:var(--muted);font-weight:700}
+.aux{display:flex;gap:10px;margin-bottom:8px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.opt{font:inherit;font-size:1.1rem;font-weight:900;padding:12px 4px;border-radius:14px;border:3px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.aux .opt{flex:1;padding:8px 4px}
+.opt.sel{border-color:var(--accent2);background:#e8f0fc}
+.opt.right{border-color:var(--good);background:#e4f6ea;color:#18693a}
+.opt.wrong{border-color:var(--bad);background:#fde7e5;color:#9b2a22}
+.opt:disabled{cursor:default}
+
+.feedback{border-radius:16px;padding:14px;margin:10px 0 14px;text-align:center;font-weight:700}
+.feedback.ok{background:#e4f6ea;color:#18693a}
+.feedback.no{background:#fde7e5;color:#9b2a22}
+.feedback.neutral{background:#e8f0fc;color:#22477e}
+.fullrow{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:.85rem;text-align:center;margin-top:10px}
+.fullrow div{background:rgba(255,255,255,.75);border-radius:8px;padding:6px 2px;color:var(--ink)}
+.fullrow small{display:block;color:var(--muted);font-size:.62rem;font-weight:700}
+.hidden{display:none!important}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
+.dots{white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--line);margin-right:3px}
+.dot.f{background:var(--good)}
+.done{text-align:center}
+.done .emoji{font-size:4rem}
+.legend{font-size:.8rem;color:var(--muted);margin-top:8px}
+.confirm{background:#fde7e5;border-radius:14px;padding:12px;margin-top:10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- START -->
+<section id="start">
+  <h1>⭐ Unregelmäßige Zeitwörter</h1>
+  <p class="sub">Lernkartei – jeden Tag ein bisschen üben!</p>
+
+  <div class="panel">
+    <div class="stats">
+      <div class="stat"><b id="sDue">0</b><span>heute fällig</span></div>
+      <div class="stat"><b id="sKnown">0</b><span>sicher gewusst</span></div>
+      <div class="stat"><b id="sStreak">0</b><span>Tage am Stück 🔥</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="label">Welches Blatt?</p>
+    <div class="row" id="sheetSel">
+      <button class="chip" data-v="1">Blatt 1<br><small>bringen … befehlen</small></button>
+      <button class="chip" data-v="2">Blatt 2<br><small>denken … erschrecken</small></button>
+      <button class="chip" data-v="all">Beide</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="label">Wie üben?</p>
+    <div class="row" id="modeSel">
+      <button class="chip" data-v="flip">🃏<br>Aufdecken</button>
+      <button class="chip" data-v="pick">👆<br>Auswählen</button>
+    </div>
+  </div>
+
+  <button class="big" id="go">Los geht's!</button>
+  <p style="text-align:center"><button class="ghost" id="extra">Alle Zeitwörter noch einmal üben</button></p>
+  <p style="text-align:center"><button class="ghost" id="showOverview">📋 Fortschritt ansehen</button></p>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz" class="hidden">
+  <div class="topbar">
+    <button class="ghost" id="quit">✕ Beenden</button>
+    <span id="counter" style="font-weight:700;color:var(--muted)"></span>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+  <div class="panel">
+    <div class="verb" id="qVerb"></div>
+    <div class="sk" id="qSk"></div>
+    <div class="ask">Wie heißen die Formen? (er / sie …)</div>
+
+    <!-- Auswählen -->
+    <div id="pickArea">
+      <div class="sec"><h3>Mitvergangenheit</h3><div class="opts" id="oMv"></div></div>
+      <div class="sec"><h3>Vergangenheit <small>– hat oder ist?</small></h3>
+        <div class="aux" id="oAux"></div>
+        <div class="opts" id="oVg"></div>
+      </div>
+      <div class="sec"><h3>Zukunft</h3><div class="opts" id="oZk"></div></div>
+      <button class="big blue" id="pickCheck" disabled>Prüfen</button>
+    </div>
+
+    <!-- Aufdecken -->
+    <div id="flipArea">
+      <button class="big blue" id="reveal">Aufdecken</button>
+    </div>
+
+    <div id="fb" class="hidden"></div>
+
+    <div id="selfGrade" class="row hidden">
+      <button class="big red" style="flex:1" id="gNo">✗ Noch nicht</button>
+      <button class="big green" style="flex:1" id="gYes">✓ Alles gewusst</button>
+    </div>
+
+    <div id="nextArea" class="hidden">
+      <button class="big" id="next">Weiter ➜</button>
+    </div>
+  </div>
+</section>
+
+<!-- DONE -->
+<section id="done" class="hidden">
+  <div class="panel done">
+    <div class="emoji" id="doneEmoji">🎉</div>
+    <h1 id="doneTitle">Super gemacht!</h1>
+    <p class="sub" id="doneText"></p>
+    <button class="big" id="back">Zurück</button>
+  </div>
+</section>
+
+<!-- OVERVIEW -->
+<section id="overview" class="hidden">
+  <div class="topbar"><button class="ghost" id="ovBack">← Zurück</button></div>
+  <div class="panel">
+    <h1>📋 Fortschritt</h1>
+    <table>
+      <thead><tr><th>Nennform</th><th>Stufe</th><th>wieder dran</th></tr></thead>
+      <tbody id="ovBody"></tbody>
+    </table>
+    <p class="legend">Jeder grüne Punkt = eine Stufe weiter. 5 Punkte = sicher gewusst. Ein Zeitwort kommt seltener, je öfter es richtig war (heute → morgen → 2 Tage → 4 Tage → 1 Woche). Ein Fehler schickt es zurück auf Stufe 1.</p>
+  </div>
+  <div class="panel">
+    <button class="ghost" id="resetAsk" style="color:var(--bad)">Fortschritt löschen</button>
+    <div id="resetBox" class="confirm hidden">
+      Wirklich alles löschen?<br>
+      <button class="ghost" id="resetNo">Nein</button>
+      <button class="ghost" id="resetYes" style="color:var(--bad)">Ja, löschen</button>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// ---------- Daten (von den Arbeitsblättern) ----------
+const VERBS = [
+  ["bringen","brachte","hat gebracht",1,"priniesť"],
+  ["brennen","brannte","hat gebrannt",1,"horieť"],
+  ["braten","briet","hat gebraten",1,"piecť, opekať"],
+  ["brechen","brach","ist gebrochen",1,"zlomiť"],
+  ["blasen","blies","hat geblasen",1,"fúkať"],
+  ["bleiben","blieb","ist geblieben",1,"zostať"],
+  ["binden","band","hat gebunden",1,"viazať"],
+  ["bitten","bat","hat gebeten",1,"prosiť"],
+  ["bekommen","bekam","hat bekommen",1,"dostať"],
+  ["biegen","bog","hat gebogen",1,"ohnúť"],
+  ["beißen","biss","hat gebissen",1,"hrýzť"],
+  ["beginnen","begann","hat begonnen",1,"začať"],
+  ["befehlen","befahl","hat befohlen",1,"rozkázať"],
+  ["denken","dachte","hat gedacht",2,"myslieť"],
+  ["dürfen","durfte","hat gedurft",2,"smieť"],
+  ["finden","fand","hat gefunden",2,"nájsť"],
+  ["fahren","fuhr","ist gefahren",2,"cestovať, ísť (autom)"],
+  ["einladen","lud ein","hat eingeladen",2,"pozvať"],
+  ["erfahren","erfuhr","hat erfahren",2,"dozvedieť sa"],
+  ["fallen","fiel","ist gefallen",2,"padnúť"],
+  ["erfinden","erfand","hat erfunden",2,"vynájsť"],
+  ["empfehlen","empfahl","hat empfohlen",2,"odporučiť"],
+  ["fangen","fing","hat gefangen",2,"chytiť"],
+  ["essen","aß","hat gegessen",2,"jesť"],
+  ["entscheiden","entschied","hat entschieden",2,"rozhodnúť (sa)"],
+  ["erschrecken","erschrak","ist erschrocken",2,"zľaknúť sa"],
+];
+const INTERVALS = [0,0,1,2,4,7]; // Tage je Stufe (Index = Stufe 1..5)
+const MAXBOX = 5, NEW_PER_DAY = 8, SESSION_MAX = 15;
+
+// ---------- Speicher ----------
+const KEY = "uzw-leitner-v2";
+let S = {cards:{}, sheet:"all", mode:"flip", lastDay:null, streak:0, newToday:0, newDay:null};
+try {
+  const raw = localStorage.getItem(KEY);
+  if (raw) S = Object.assign(S, JSON.parse(raw));
+  else { // alten Stand (eine Karte je Form) übernehmen
+    const old = JSON.parse(localStorage.getItem("uzw-leitner-v1")||"null");
+    if (old){
+      Object.assign(S, {sheet:old.sheet||"all", lastDay:old.lastDay, streak:old.streak||0});
+      VERBS.forEach((v,i)=>{
+        const a=old.cards[i+":mv"], b=old.cards[i+":vg"];
+        if (a && b) S.cards[i] = a.box<=b.box ? a : b;
+        else if (a||b) S.cards[i] = {box:1, due:(a||b).due};
+      });
+    }
+  }
+} catch(e){}
+if (!["pick","flip"].includes(S.mode)) S.mode="flip";
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const today = () => Math.floor((Date.now() - new Date().getTimezoneOffset()*60000) / 86400000);
+function allCards(){ const out=[]; VERBS.forEach((v,i)=>{ if (S.sheet==="all" || String(v[3])===S.sheet) out.push(String(i)); }); return out; }
+function dueCards(){ const t=today(); return allCards().filter(id=>S.cards[id] && S.cards[id].due<=t); }
+function newCards(){ return allCards().filter(id=>!S.cards[id]); }
+function newLeft(){ if (S.newDay!==today()){ S.newDay=today(); S.newToday=0; } return Math.max(0, NEW_PER_DAY - S.newToday); }
+
+const $ = id => document.getElementById(id);
+function show(sec){ ["start","quiz","done","overview"].forEach(s=>$(s).classList.toggle("hidden", s!==sec)); window.scrollTo(0,0); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// ---------- Startseite ----------
+function renderStart(){
+  document.querySelectorAll("#sheetSel .chip").forEach(b=>b.classList.toggle("on", b.dataset.v===S.sheet));
+  document.querySelectorAll("#modeSel .chip").forEach(b=>b.classList.toggle("on", b.dataset.v===S.mode));
+  const due = dueCards().length + Math.min(newLeft(), newCards().length);
+  $("sDue").textContent = due;
+  $("sKnown").textContent = allCards().filter(id=>S.cards[id] && S.cards[id].box>=MAXBOX).length + "/" + allCards().length;
+  const t=today();
+  $("sStreak").textContent = (S.lastDay===t || S.lastDay===t-1) ? S.streak : 0;
+  $("go").disabled = due===0;
+  $("go").textContent = due===0 ? "Für heute alles erledigt ✓" : "Los geht's! ("+Math.min(due,SESSION_MAX)+" Zeitwörter)";
+}
+document.querySelectorAll("#sheetSel .chip").forEach(b=>b.onclick=()=>{S.sheet=b.dataset.v; save(); renderStart();});
+document.querySelectorAll("#modeSel .chip").forEach(b=>b.onclick=()=>{S.mode=b.dataset.v; save(); renderStart();});
+
+// ---------- Ablauf ----------
+let queue=[], total=0, doneCount=0, cur=null, right=0, wrong=0, extraMode=false;
+
+function startSession(extra){
+  extraMode = extra;
+  if (extra) queue = shuffle(allCards()).slice(0, SESSION_MAX);
+  else queue = shuffle(shuffle(dueCards()).concat(newCards().slice(0, newLeft()))).slice(0, SESSION_MAX);
+  total = queue.length; doneCount=0; right=0; wrong=0;
+  if (!total) return;
+  show("quiz"); nextCard();
+}
+
+function V(){ return VERBS[+cur]; }
+function parts(v){ return {mv:v[1], aux:v[2].split(" ")[0], vg:v[2].split(" ").slice(1).join(" "), zk:"wird "+v[0]}; }
+
+function nextCard(){
+  if (!queue.length) return finish();
+  cur = queue.shift();
+  $("qVerb").textContent = V()[0];
+  $("qSk").textContent = V()[4];
+  $("counter").textContent = (doneCount+1)+" / "+total;
+  $("bar").style.width = (doneCount/total*100)+"%";
+  $("fb").className="hidden"; $("selfGrade").classList.add("hidden"); $("nextArea").classList.add("hidden");
+  $("pickArea").classList.toggle("hidden", S.mode!=="pick");
+  $("flipArea").classList.toggle("hidden", S.mode!=="flip");
+  if (S.mode==="pick") renderPick();
+  window.scrollTo(0,0);
+}
+
+function fullRow(v){
+  return '<div class="fullrow">'+
+    '<div><small>Nennform</small>'+v[0]+'<small>'+v[4]+'</small></div>'+
+    '<div><small>Mitverg.</small>'+v[1]+'</div>'+
+    '<div><small>Verg.</small>'+v[2]+'</div>'+
+    '<div><small>Zukunft</small>wird '+v[0]+'</div></div>';
+}
+function showFeedback(cls, msg){ const fb=$("fb"); fb.className="feedback "+cls; fb.innerHTML = msg + fullRow(V()); }
+
+// ---------- falsche Antworten erzeugen ----------
+const VG_RE=/(ie|ei|au|äu|eu|[aeiouäöü])/g;
+const VOWELS=["a","e","i","o","u","ie","ei"];
+const INSEP=/^(be|emp|ent|er)/;
+const BAN=["erschreckte","erschreckt"]; // wären in anderer Bedeutung richtig
+function vowelVariants(word){
+  const sp = word.indexOf(" ");
+  if (sp>0) return vowelVariants(word.slice(0,sp)).map(w=>w+word.slice(sp));
+  const groups=[...word.matchAll(VG_RE)];
+  if (!groups.length) return [];
+  let g = groups[groups.length-1];
+  if (/(en|e)$/.test(word) && groups.length>1) g = groups[groups.length-2];
+  return VOWELS.filter(x=>x!==g[0]).map(x=>word.slice(0,g.index)+x+word.slice(g.index+g[0].length));
+}
+function splitSep(inf){ return inf.startsWith("ein") ? ["ein", inf.slice(3)] : ["", inf]; }
+function pick3(correct, first, rest){
+  const out=[];
+  for (const p of [first].concat(shuffle(rest))){ if (p && p!==correct && !BAN.includes(p) && !out.includes(p)) out.push(p); if (out.length===3) break; }
+  return out;
+}
+function options(v, f){
+  const P=parts(v), [sep, base]=splitSep(v[0]), stem=base.replace(/e?n$/,"");
+  const td=/[td]$/.test(stem);
+  if (f==="mv") return shuffle([P.mv].concat(pick3(P.mv, stem+(td?"ete":"te")+(sep?" "+sep:""), vowelVariants(P.mv))));
+  if (f==="vg"){
+    const reg = sep ? sep+"ge"+stem+(td?"et":"t") : INSEP.test(base) ? stem+(td?"et":"t") : "ge"+stem+(td?"et":"t");
+    const geInf = sep ? sep+"ge"+base : INSEP.test(base) ? null : "ge"+base;
+    return shuffle([P.vg].concat(pick3(P.vg, reg, [geInf].concat(vowelVariants(P.vg)))));
+  }
+  const pres = sep ? stem+(td?"et":"t")+" "+sep : stem+(td?"et":"t");
+  const rest = ["wird "+v[1], "wird "+P.vg, "wird "+pres].concat(vowelVariants(v[0]).map(w=>"wird "+w));
+  return shuffle([P.zk].concat(pick3(P.zk, null, rest)));
+}
+
+// ---------- Auswählen ----------
+let sel={};
+function makeOpts(box, list, key){
+  box.innerHTML="";
+  list.forEach(o=>{
+    const b=document.createElement("button"); b.className="opt"; b.textContent=o; b.dataset.val=o; b.dataset.key=key;
+    b.onclick=()=>{ sel[key]=o; box.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel", x===b)); $("pickCheck").disabled = Object.values(sel).some(x=>x===null); };
+    box.appendChild(b);
+  });
+}
+function renderPick(){
+  const v=V(); sel={mv:null, aux:null, vg:null, zk:null};
+  makeOpts($("oMv"), options(v,"mv"), "mv");
+  makeOpts($("oAux"), ["hat","ist"], "aux");
+  makeOpts($("oVg"), options(v,"vg"), "vg");
+  makeOpts($("oZk"), options(v,"zk"), "zk");
+  $("pickCheck").disabled=true; $("pickCheck").classList.remove("hidden");
+}
+function checkPick(){
+  const P=parts(V());
+  document.querySelectorAll("#pickArea .opt").forEach(b=>{
+    b.disabled=true; b.classList.remove("sel");
+    const k=b.dataset.key, val=b.dataset.val;
+    if (val===P[k]) b.classList.add("right"); else if (val===sel[k]) b.classList.add("wrong");
+  });
+  const wrongs = Object.keys(sel).filter(k=>sel[k]!==P[k]);
+  const ok = !wrongs.length;
+  let msg = "Alles richtig! 🎉";
+  if (!ok){
+    const names={mv:"Mitvergangenheit", aux:"hat / ist", vg:"Vergangenheit", zk:"Zukunft"};
+    msg = "Schau noch einmal: " + wrongs.map(k=>names[k]).filter((x,i,a)=>a.indexOf(x)===i).join(", ");
+  }
+  $("pickCheck").classList.add("hidden");
+  showFeedback(ok?"ok":"no", msg);
+  grade(ok);
+  $("nextArea").classList.remove("hidden");
+}
+$("pickCheck").onclick=checkPick;
+
+// ---------- Aufdecken ----------
+function reveal(){ $("flipArea").classList.add("hidden"); showFeedback("neutral","Die Lösung:"); $("selfGrade").classList.remove("hidden"); }
+
+// ---------- Bewerten (Lernkartei) ----------
+function grade(ok){
+  const c = S.cards[cur];
+    if (!c){ if (S.newDay!==today()){S.newDay=today(); S.newToday=0;} S.newToday++; }
+  let box = c ? c.box : 1;
+  if (ok){ if (!extraMode || !c) box = Math.min(MAXBOX, box+1); right++; }
+  else { box = 1; wrong++; queue.splice(Math.min(3, queue.length), 0, cur); total++; }
+  S.cards[cur] = {box, due: today() + INTERVALS[box]};
+  doneCount++; save();
+}
+function markToday(){ const t=today(); if (S.lastDay===t) return; S.streak = (S.lastDay===t-1) ? S.streak+1 : 1; S.lastDay=t; save(); }
+function finish(){
+  markToday();
+  $("bar").style.width="100%";
+  const pct = right/(right+wrong||1);
+  $("doneEmoji").textContent = pct>=.9?"🏆":pct>=.6?"🎉":"💪";
+  $("doneTitle").textContent = pct>=.9?"Fantastisch!":pct>=.6?"Super gemacht!":"Gut geübt!";
+  $("doneText").textContent = right+" richtig, "+wrong+" zum Wiederholen. Die schwierigen Zeitwörter kommen bald wieder dran.";
+  show("done");
+}
+
+// ---------- Übersicht ----------
+function renderOverview(){
+  let h=""; const t=today();
+  VERBS.forEach((v,i)=>{
+    if (i===0) h+='<tr><td colspan="3" style="font-weight:900">Blatt 1</td></tr>';
+    if (i===13) h+='<tr><td colspan="3" style="font-weight:900;padding-top:14px">Blatt 2</td></tr>';
+    const c=S.cards[i], b=c?c.box:0;
+    let d='<span class="dots">'; for(let k=1;k<=MAXBOX;k++) d+='<span class="dot'+(k<=b?' f':'')+'"></span>'; d+='</span>';
+    const when = !c ? "neu" : c.due<=t ? "heute" : c.due===t+1 ? "morgen" : "in "+(c.due-t)+" Tagen";
+    h+='<tr><td>'+v[0]+'<span class="skt">'+v[4]+'</span></td><td>'+d+'</td><td>'+when+'</td></tr>';
+  });
+  $("ovBody").innerHTML=h; $("resetBox").classList.add("hidden"); show("overview");
+}
+
+// ---------- Knöpfe ----------
+$("go").onclick=()=>startSession(false);
+$("extra").onclick=()=>startSession(true);
+$("reveal").onclick=reveal;
+$("gYes").onclick=()=>{ grade(true); nextCard(); };
+$("gNo").onclick=()=>{ grade(false); nextCard(); };
+$("next").onclick=nextCard;
+$("quit").onclick=()=>{ if(doneCount>0) markToday(); renderStart(); show("start"); };
+$("back").onclick=()=>{ renderStart(); show("start"); };
+$("showOverview").onclick=renderOverview;
+$("ovBack").onclick=()=>{ renderStart(); show("start"); };
+$("resetAsk").onclick=()=>$("resetBox").classList.remove("hidden");
+$("resetNo").onclick=()=>$("resetBox").classList.add("hidden");
+$("resetYes").onclick=()=>{ S.cards={}; S.streak=0; S.lastDay=null; S.newToday=0; save(); renderOverview(); };
+
+renderStart();
+</script>
+</body>
+</html>
