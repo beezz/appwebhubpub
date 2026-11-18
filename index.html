@@ -84,14 +84,17 @@
   .stretch { color: inherit; text-decoration: none; outline: none; }
   .stretch::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
   .card.archived { opacity: .6; }
-  .top { display: flex; align-items: center; gap: 10px; }
-  .fav { width: 28px; height: 28px; border-radius: 7px; flex: none; background: var(--bg); object-fit: cover; }
-  .fav-fallback {
-    width: 28px; height: 28px; border-radius: 7px; flex: none; display: grid; place-items: center;
-    font-size: 13px; font-weight: 600;
+  .top { display: flex; align-items: center; gap: 14px; }
+  .fav, .fav-fallback, .fav-emoji {
+    width: 52px; height: 52px; border-radius: 12px; flex: none; background: var(--bg);
+    display: grid; place-items: center; line-height: 1;
   }
-  .fav-emoji { width: 28px; height: 28px; border-radius: 7px; flex: none; display: grid; place-items: center; font-size: 19px; line-height: 1; background: var(--bg); }
-  .title { font-weight: 600; font-size: 15px; line-height: 1.3; flex: 1; }
+  .fav { object-fit: cover; padding: 0; }
+  .fav-fallback { font-size: 22px; font-weight: 600; }
+  .fav-emoji { font-size: 32px; }
+  .list .fav, .list .fav-fallback, .list .fav-emoji { width: 36px; height: 36px; border-radius: 9px; }
+  .list .fav-fallback { font-size: 16px; } .list .fav-emoji { font-size: 22px; }
+  .title { font-weight: 600; font-size: 16px; line-height: 1.3; flex: 1; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); flex: none; }
   .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); }
   .desc { color: var(--muted); font-size: 13.5px; flex: 1; }
