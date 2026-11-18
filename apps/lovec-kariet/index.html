@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lovec kariet – zberateľská hra</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --yellow:#ffcb05; --yellow2:#ffde59; --blue:#2a75bb; --navy:#1b3f8b; --deep:#0e2559;
+    --red:#e3350d; --red2:#ff5b36; --ink:#ffffff; --muted:#c9d8ff; --green:#4cd964;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Fredoka,system-ui,sans-serif;color:var(--ink);min-height:100vh;
+    background:
+      radial-gradient(circle at 15% -10%,rgba(255,203,5,.25),transparent 40%),
+      radial-gradient(circle at 100% 30%,rgba(227,53,13,.18),transparent 35%),
+      radial-gradient(rgba(255,255,255,.07) 1.5px,transparent 1.6px) 0 0/22px 22px,
+      linear-gradient(180deg,#2a75bb 0%,#1b3f8b 45%,#0e2559 100%) fixed;}
+  header{position:sticky;top:0;z-index:25;background:var(--yellow);box-shadow:0 4px 0 #c79a00,0 8px 20px rgba(0,0,0,.3);padding:10px 16px}
+  .top{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  h1{margin:0;font-size:28px;font-weight:700;color:var(--navy);letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+  h1 .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--red),#a3240a);display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);transform:rotate(-8deg)}
+  .stats{display:flex;gap:8px;flex-wrap:wrap}
+  .stat{background:#fff;border-radius:14px;padding:5px 14px;font-size:13px;color:#5a6fa8;box-shadow:0 3px 0 #d9a800;position:relative}
+  .stat b{display:block;color:var(--navy);font-size:19px;transition:transform .25s}
+  .stat.money b{color:var(--red)}
+  .stat b.bump{transform:scale(1.25)}
+  nav{max-width:1100px;margin:18px auto 0;display:flex;gap:10px;padding:0 16px}
+  nav button{flex:1;max-width:210px}
+  main{max-width:1100px;margin:0 auto;padding:18px 16px}
+  button{font-family:inherit;font-size:16px;font-weight:600;border:0;border-radius:14px;padding:10px 16px;cursor:pointer;background:#fff;color:var(--navy);box-shadow:0 4px 0 #9fb3e0;transition:transform .1s,box-shadow .1s,background .2s}
+  button:hover{transform:translateY(-2px)}
+  button:active{transform:translateY(2px);box-shadow:0 2px 0 #9fb3e0}
+  button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  button.on,button.primary{background:var(--red);color:#fff;box-shadow:0 4px 0 #8f1f06}
+  button.gold{background:var(--yellow);color:var(--navy);box-shadow:0 4px 0 #b38900}
+  .hint{color:var(--muted);margin:0 0 18px;line-height:1.5}
+  .hint b{color:var(--yellow)}
+
+  /* ===== Balíčky (fólia) ===== */
+  .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+  .pack{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.18);border-radius:24px;padding:20px 18px;text-align:center;backdrop-filter:blur(4px)}
+  .pack h3{margin:14px 0 4px;font-size:22px}
+  .pack p{margin:0 0 12px;font-size:14px;color:var(--muted)}
+  .foil{--pk:linear-gradient(160deg,#5aa9ff,#2a75bb 45%,#173f8a);position:relative;width:170px;height:250px;margin:0 auto;filter:drop-shadow(0 12px 18px rgba(0,0,0,.45));transition:transform .25s}
+  .pack:hover .foil{transform:translateY(-6px) rotate(-2deg)}
+  .foil .ftop,.foil .fbody{position:absolute;left:0;right:0;background:var(--pk);overflow:hidden}
+  .foil .ftop{top:0;height:34px;border-radius:8px 8px 0 0}
+  .foil .fbody{top:34px;bottom:0;border-radius:0 0 8px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+  .foil .ftop::before,.foil .fbody::after{content:"";position:absolute;left:0;right:0;height:12px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 3px,rgba(0,0,0,.15) 3px 6px)}
+  .foil .ftop::before{top:0}
+  .foil .fbody::after{bottom:0}
+  .foil .ftop::after{content:"";position:absolute;left:0;right:0;bottom:0;border-bottom:2px dashed rgba(255,255,255,.6)}
+  .foil .fbody::before{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.5) 45%,transparent 58%);background-size:260% 100%;animation:shine 3s infinite}
+  .foil .emb{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,rgba(255,255,255,.65) 40%,rgba(255,255,255,.2) 70%);display:flex;align-items:center;justify-content:center;font-size:52px;border:4px solid var(--yellow);box-shadow:0 0 0 4px rgba(0,0,0,.15)}
+  .foil .fname{font-weight:700;font-size:17px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.35);padding:0 10px;line-height:1.1}
+  .foil .fsub{font-size:12px;background:var(--yellow);color:var(--navy);font-weight:700;padding:2px 10px;border-radius:10px}
+  .foil.p2{--pk:linear-gradient(160deg,#ff8a5c,#e3350d 45%,#8f1f06)}
+  .foil.p3{--pk:linear-gradient(160deg,#fff1a8,#ffcb05 35%,#d99a00 60%,#3a2a00)}
+  .foil.p3 .fname{color:#2a1d00;text-shadow:0 1px 0 rgba(255,255,255,.6)}
+  .foil.p3 .emb{border-color:#fff}
+
+  .qty{display:flex;gap:6px;justify-content:center;margin:4px 0 12px}
+  .qty button{padding:6px 0;width:52px;font-size:15px;border-radius:10px}
+  .buybtn{width:100%;font-size:17px}
+  .buybtn small{display:block;font-size:12px;opacity:.85;font-weight:500}
+
+  .odds{margin-top:26px;background:rgba(14,37,89,.65);border:2px solid rgba(255,255,255,.15);border-radius:20px;padding:16px 20px}
+  .odds h3{margin:0 0 10px;color:var(--yellow)}
+  .odds table{width:100%;border-collapse:collapse;font-size:14px}
+  .odds td,.odds th{padding:6px;text-align:right;border-bottom:1px solid rgba(255,255,255,.12)}
+  .odds td:first-child,.odds th:first-child{text-align:left}
+  .odds th{color:var(--muted);font-weight:500}
+
+  /* ===== Karty ===== */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
+  .card{position:relative;aspect-ratio:5/7;border-radius:14px;padding:7px;background:var(--yellow);box-shadow:0 8px 18px rgba(0,0,0,.45);color:#1a1a1a;overflow:hidden}
+  .card .cin{height:100%;border-radius:9px;background:var(--el);padding:7px;display:flex;flex-direction:column;position:relative}
+  .card .nm{font-weight:700;font-size:14px;line-height:1.1;display:flex;justify-content:space-between;gap:4px;align-items:flex-start}
+  .card .pic{flex:1;margin:6px 0;border-radius:6px;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.95),rgba(255,255,255,.45));display:flex;align-items:center;justify-content:center;font-size:54px;border:3px solid #d8b200;box-shadow:inset 0 0 12px rgba(0,0,0,.15)}
+  .card .meta{font-size:11px;display:flex;justify-content:space-between;gap:4px;opacity:.9}
+  .card .tier{font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .card .val{font-weight:700;font-size:15px;margin-top:2px}
+  .card .cnt{position:absolute;top:4px;right:4px;background:var(--red);color:#fff;border-radius:10px;padding:1px 8px;font-size:13px;font-weight:700;z-index:3;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+  .card.t-rare{background:linear-gradient(135deg,#f5f7fa,#b8c2cc,#f5f7fa,#9aa5b1)}
+  .card.t-ultra{background:linear-gradient(135deg,#fff3b0,#ffcb05,#fff3b0,#d99a00);box-shadow:0 0 16px rgba(255,203,5,.7),0 8px 18px rgba(0,0,0,.45)}
+  .card.t-secret{background:linear-gradient(135deg,#ffd1f0,#ff7bd5,#b9a3ff,#7fe3ff);box-shadow:0 0 20px rgba(255,123,213,.7),0 8px 18px rgba(0,0,0,.45)}
+  .card.t-legend{background:linear-gradient(135deg,#ffe28a,#ff9f1c,#e3350d,#ffe28a);box-shadow:0 0 26px rgba(255,159,28,.9),0 8px 18px rgba(0,0,0,.45)}
+  .card.t-mythic{background:linear-gradient(90deg,#ff5f6d,#ffcb05,#4cd964,#5ac8fa,#a66bff,#ff5f6d);background-size:300% 100%;animation:holo 3s linear infinite;box-shadow:0 0 30px #fff,0 0 60px var(--yellow)}
+  .holo .cin::after{content:"";position:absolute;inset:0;border-radius:9px;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.6) 45%,transparent 60%);background-size:260% 100%;animation:shine 2.6s infinite;pointer-events:none}
+  @keyframes shine{from{background-position:150% 0}to{background-position:-110% 0}}
+  @keyframes holo{to{background-position:300% 0}}
+  .card.missing{background:rgba(255,255,255,.12);box-shadow:none;color:var(--muted)}
+  .card.missing .cin{background:rgba(14,37,89,.7)}
+  .card.missing .pic{background:rgba(255,255,255,.06);color:rgba(255,255,255,.25);font-size:44px;border-color:rgba(255,255,255,.15);box-shadow:none}
+
+  .album-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .album-head h2{margin:0;color:var(--yellow)}
+  .bar{height:14px;background:rgba(0,0,0,.3);border-radius:8px;overflow:hidden;width:240px;margin-top:4px;border:2px solid rgba(255,255,255,.2)}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--yellow),var(--red2))}
+  .sellbtn{margin-top:8px;width:100%;font-size:13px;padding:6px}
+  .cardwrap{display:flex;flex-direction:column}
+  .empty{padding:34px;text-align:center;color:var(--muted);background:rgba(14,37,89,.6);border-radius:20px}
+
+  /* ===== Otváranie ===== */
+  .overlay{position:fixed;inset:0;z-index:20;display:none;overflow-x:hidden;align-items:center;justify-content:center;padding:110px 16px 16px;overflow:auto;
+    background:radial-gradient(circle at 50% 45%,#2f7fcb,#0b1c45 72%)}
+  .overlay.show{display:flex}
+  .overlay::before{content:"";position:fixed;inset:-50%;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.05) 0 8deg,transparent 8deg 16deg);animation:spin 40s linear infinite;pointer-events:none}
+  .opening{position:relative;max-width:1040px;width:100%;text-align:center;margin:auto}
+  .opening h2{margin:0;font-size:26px;color:var(--yellow);text-shadow:0 3px 0 rgba(0,0,0,.3)}
+  .ocount{color:var(--muted);margin:4px 0 0;min-height:22px}
+  .stage{min-height:360px;display:flex;align-items:center;justify-content:center;margin:12px 0}
+  .bigwrap{position:relative;cursor:pointer;padding:30px}
+  .bigwrap::before{content:"";position:absolute;inset:-40px;border-radius:50%;background:radial-gradient(circle,rgba(255,203,5,.55),transparent 65%);animation:pulse 1.4s ease-in-out infinite}
+  .bigwrap .foil{transform:scale(1.25);animation:wiggle 1.6s ease-in-out infinite}
+  .bigwrap .tap{position:absolute;left:0;right:0;bottom:-22px;color:#fff;font-weight:600;animation:pulse 1.4s infinite}
+  .bigwrap.tear{cursor:default}
+  .bigwrap.tear::before{animation:glowup .8s forwards}
+  .bigwrap.tear .foil{animation:shake .45s linear}
+  .bigwrap.tear .ftop{animation:stripOff .7s .35s cubic-bezier(.3,.7,.4,1) forwards}
+  .bigwrap.tear .fbody{animation:bodyOff .6s .7s ease-in forwards}
+  .bigwrap.tear .tap{display:none}
+  @keyframes wiggle{0%,100%{transform:scale(1.25) rotate(-2deg)}50%{transform:scale(1.28) rotate(2deg)}}
+  @keyframes shake{0%,100%{transform:scale(1.25) translateX(0)}20%{transform:scale(1.3) translateX(-8px) rotate(-4deg)}40%{transform:scale(1.3) translateX(8px) rotate(4deg)}60%{transform:scale(1.3) translateX(-6px) rotate(-3deg)}80%{transform:scale(1.3) translateX(6px) rotate(3deg)}}
+  @keyframes stripOff{to{transform:translate(140px,-220px) rotate(48deg);opacity:0}}
+  @keyframes bodyOff{0%{filter:brightness(1)}40%{filter:brightness(2.5)}100%{transform:translateY(80px) scale(.85);opacity:0;filter:brightness(3)}}
+  @keyframes pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+  @keyframes glowup{to{opacity:1;transform:scale(1.8)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .reveal{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,160px));justify-content:center;gap:16px;width:100%}
+  .flip{position:relative;perspective:900px;aspect-ratio:5/7;cursor:pointer;animation:dealIn .55s cubic-bezier(.2,.9,.3,1.2) both}
+  @keyframes dealIn{from{transform:translateY(-160px) scale(.5) rotate(-14deg);opacity:0}to{transform:none;opacity:1}}
+  .flip .inner{position:relative;z-index:1;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.8,.3,1.1);transform-style:preserve-3d}
+  .flip.open .inner{transform:rotateY(180deg)}
+  .flip:not(.open):hover .inner{transform:translateY(-8px) rotate(-2deg)}
+  .flip .back,.flip .front{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+  .flip .front{transform:rotateY(180deg)}
+  .flip .front .card{height:100%}
+  .flip .back{border-radius:14px;padding:7px;background:var(--yellow);box-shadow:0 8px 18px rgba(0,0,0,.45)}
+  .flip .back .bk{height:100%;border-radius:9px;background:radial-gradient(circle at 50% 50%,#5aa9ff 0 18%,transparent 19%),repeating-conic-gradient(from 0deg,#2a75bb 0 15deg,#1b3f8b 15deg 30deg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .flip .back .bk span{font-size:38px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+  .flip .back .bk::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 45%,transparent 60%);background-size:260% 100%;animation:shine 2.4s infinite}
+  .flip .rays{position:absolute;inset:-45%;z-index:0;opacity:0;transition:opacity .5s .3s;pointer-events:none;
+    background:repeating-conic-gradient(from 0deg,var(--ray,#fff) 0 9deg,transparent 9deg 22deg);
+    -webkit-mask-image:radial-gradient(circle,#000 22%,transparent 62%);mask-image:radial-gradient(circle,#000 22%,transparent 62%);animation:spin 7s linear infinite}
+  .flip.open.glow .rays{opacity:.9}
+  .flip.r-rare{--ray:#e8eef5}.flip.r-ultra{--ray:#ffcb05}.flip.r-secret{--ray:#ff7bd5}.flip.r-legend{--ray:#ff9f1c}.flip.r-mythic{--ray:#ffffff}
+  .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%) scale(0);background:var(--green);color:#0b3b18;font-weight:700;font-size:12px;padding:3px 10px;border-radius:10px;z-index:4;white-space:nowrap;box-shadow:0 3px 0 #2a8a3c;transition:transform .35s .55s cubic-bezier(.3,1.6,.5,1)}
+  .tag.new{background:var(--yellow);color:var(--navy);box-shadow:0 3px 0 #b38900}
+  .flip.open .tag{transform:translateX(-50%) scale(1)}
+  .osum{min-height:30px;font-size:18px;margin:6px 0 10px}
+  .osum b.g{color:var(--green)}
+  .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .sumbox{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.2);border-radius:22px;padding:18px;width:100%;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+  .sumstats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+  .sumstats div{background:#fff;color:var(--navy);border-radius:14px;padding:8px 16px;font-size:13px;box-shadow:0 3px 0 #9fb3e0}
+  .sumstats b{display:block;font-size:20px}
+  .sumstats .plus b{color:#1f9e3a}
+  .grid.mini{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;max-height:46vh;overflow:auto;padding:6px}
+  .grid.mini .card .pic{font-size:36px}
+  .grid.mini .card .nm{font-size:12px}
+  .grid.mini .card .meta{font-size:9px}
+  .grid.mini .card .val{font-size:13px}
+  @keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+  .modal{background:#fff;color:var(--navy);border-radius:22px;padding:24px;max-width:420px;text-align:center;margin:auto;box-shadow:0 8px 0 #9fb3e0;animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+  .modal h2{margin-top:0;color:var(--red)}
+  .modal button{box-shadow:0 4px 0 #9fb3e0;background:#e8eefc}
+  .modal button.primary{background:var(--red);box-shadow:0 4px 0 #8f1f06}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(140px);background:var(--yellow);color:var(--navy);font-weight:700;padding:12px 22px;border-radius:16px;z-index:40;transition:transform .35s cubic-bezier(.2,1.4,.4,1);box-shadow:0 5px 0 #b38900,0 10px 24px rgba(0,0,0,.4);text-align:center;max-width:90vw}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:35}
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:34}
+  #flash.go{animation:flash .7s ease-out}
+  @keyframes flash{0%{opacity:.95}100%{opacity:0}}
+  .floaty{position:fixed;z-index:45;font-weight:700;font-size:22px;color:#1f9e3a;background:#fff;padding:2px 10px;border-radius:12px;box-shadow:0 3px 0 #9fb3e0;pointer-events:none;animation:floatUp 1.3s ease-out forwards}
+  @keyframes floatUp{0%{transform:translateY(20px) scale(.6);opacity:0}20%{transform:translateY(0) scale(1.1);opacity:1}100%{transform:translateY(40px) scale(1);opacity:0}}
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:24px 16px}
+  footer button{font-size:13px;padding:6px 12px;margin-left:8px}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1><span class="logo">🃏</span>Lovec kariet</h1>
+    <div class="stats">
+      <div class="stat money">Peniaze<b id="sMoney">100 €</b></div>
+      <div class="stat">Hodnota albumu<b id="sAlbum">0 €</b></div>
+      <div class="stat">Otvorené balíčky<b id="sPacks">0</b></div>
+    </div>
+  </div>
+</header>
+<nav>
+  <button data-tab="shop" class="on">🛒 Obchod</button>
+  <button data-tab="album">📖 Album</button>
+  <button data-tab="pile">🗂️ Kôpka</button>
+</nav>
+<main id="main"></main>
+<footer>Vzácna karta = hodnota od 5 €. Za každú vzácnu kartu dostaneš jej hodnotu v peniazoch. Keď ti zostane menej ako 5 €, dostaneš znova 100 €.<button id="resetBtn">Nová hra</button></footer>
+
+<div class="overlay" id="overlay"><div class="opening" id="opening"></div></div>
+<div id="flash"></div>
+<canvas id="fx"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= DÁTA ================= */
+const EL = {
+  ohen:{n:"Oheň",i:"🔥",c:"linear-gradient(160deg,#ffd0a8,#ff7a45)"},
+  voda:{n:"Voda",i:"💧",c:"linear-gradient(160deg,#c9ecff,#5aa9ff)"},
+  trava:{n:"Tráva",i:"🍃",c:"linear-gradient(160deg,#ddf9b8,#6cc757)"},
+  blesk:{n:"Blesk",i:"⚡",c:"linear-gradient(160deg,#fff7b8,#ffd23f)"},
+  psy:{n:"Psychika",i:"🔮",c:"linear-gradient(160deg,#f8d0ff,#c27be6)"},
+  kamen:{n:"Kameň",i:"🪨",c:"linear-gradient(160deg,#efe0c2,#b8966a)"},
+  lad:{n:"Ľad",i:"❄️",c:"linear-gradient(160deg,#f0fdff,#9ee0f0)"},
+  duch:{n:"Tieň",i:"👻",c:"linear-gradient(160deg,#d3c6f0,#7a66b8)"},
+  kov:{n:"Kov",i:"⚙️",c:"linear-gradient(160deg,#f6f7fa,#aab3c4)"},
+  drak:{n:"Drak",i:"🐉",c:"linear-gradient(160deg,#ffe9a3,#f0883e)"},
+  hviezda:{n:"Hviezda",i:"✨",c:"linear-gradient(160deg,#fffbe0,#ffd23f 50%,#ff9ad5)"}
+};
+const TIERS = {
+  common:{n:"Bežná",cls:""},
+  uncommon:{n:"Nezvyčajná",cls:""},
+  rare:{n:"Vzácna",cls:"t-rare"},
+  ultra:{n:"Ultra vzácna",cls:"t-ultra holo"},
+  secret:{n:"Tajná",cls:"t-secret holo"},
+  legend:{n:"Legendárna",cls:"t-legend holo"},
+  mythic:{n:"Mýtická",cls:"t-mythic holo"}
+};
+const TIER_ORDER = ["mythic","legend","secret","ultra","rare","uncommon","common"];
+const FX_COLORS = {
+  common:["#ffffff","#c9d8ff"], uncommon:["#ffffff","#9fd8ff","#ffcb05"],
+  rare:["#ffffff","#dfe6ee","#b8c2cc"], ultra:["#ffcb05","#fff3b0","#ffffff","#ff9f1c"],
+  secret:["#ff7bd5","#b9a3ff","#7fe3ff","#ffffff"], legend:["#ff9f1c","#ffcb05","#e3350d","#ffffff"],
+  mythic:["#ff5f6d","#ffcb05","#4cd964","#5ac8fa","#a66bff","#ffffff"]
+};
+let nid=0;
+const C=(name,pic,el,tier,val)=>({id:"c"+(nid++),name,pic,el,tier,val});
+const CARDS = [
+  C("Lístkovec","🐛","trava","common",0.10), C("Bublinka","🐟","voda","common",0.12),
+  C("Uhlík","🦎","ohen","common",0.15), C("Kamienok","🐌","kamen","common",0.10),
+  C("Bzučko","🐝","blesk","common",0.20), C("Vločka","🐧","lad","common",0.18),
+  C("Tieňko","🦇","duch","common",0.25), C("Hubáčik","🍄","trava","common",0.12),
+  C("Kvapka","🐸","voda","common",0.15), C("Žeravko","🐞","ohen","common",0.30),
+  C("Snívik","🐨","psy","common",0.35), C("Skrutko","🐜","kov","common",0.20),
+  C("Lesník","🦔","trava","uncommon",0.60), C("Prúdivec","🦦","voda","uncommon",0.80),
+  C("Plameňák","🦩","ohen","uncommon",1.20), C("Hromotĺk","🐗","blesk","uncommon",1.00),
+  C("Mrazivec","🦭","lad","uncommon",1.50), C("Skalisko","🦏","kamen","uncommon",0.90),
+  C("Hmlistá sova","🦉","duch","uncommon",1.80), C("Kovák","🦡","kov","uncommon",2.00),
+  C("Koralová chobotnica","🐙","voda","rare",5.50), C("Lávová korytnačka","🐢","ohen","rare",6.50),
+  C("Smaragdový had","🐍","trava","rare",7.00), C("Kryštálový netopier","🦇","psy","rare",9.00),
+  C("Strieborný kôň","🐎","kov","rare",11.00), C("Bleskový vlk","🐺","blesk","rare",12.00),
+  C("Ľadový jeleň","🦌","lad","rare",15.00), C("Tieňový panter","🐆","duch","rare",18.00),
+  C("Búrkový orol","🦅","blesk","rare",22.00), C("Ohnivý líšiak","🦊","ohen","rare",25.00),
+  C("Zlatý lev","🦁","ohen","ultra",45), C("Kráľovná medúz","🪼","voda","ultra",80),
+  C("Dúhový páv","🦚","psy","ultra",95), C("Polárny mamut","🦣","lad","ultra",120),
+  C("Hromový tiger","🐅","blesk","ultra",180), C("Vesmírny žralok","🦈","voda","ultra",250),
+  C("Hviezdny jednorožec","🦄","psy","secret",650), C("Krištáľový drak","🐲","drak","secret",1500),
+  C("Pán hlbín","🐋","voda","secret",2400), C("Prastarý strom","🌳","trava","secret",4000),
+  C("Pán búrok","🌩️","drak","legend",12000), C("Obsidiánový titan","🗿","kamen","legend",35000),
+  C("Slnečný drak","☀️","drak","legend",80000),
+  C("Prvotná hviezda","🌟","hviezda","mythic",500000)
+];
+const byId = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const isRare = c => c.val >= 5;
+
+const PACKS = [
+  {key:"p1",name:"Štartovací balíček",art:"📦",price:5,count:5,desc:"5 kariet · hlavne bežné, občas vzácna",
+   odds:{mythic:1e-7,legend:4e-6,secret:8e-5,ultra:0.002,rare:0.025,uncommon:0.20}},
+  {key:"p2",name:"Prémiový balíček",art:"🎁",price:20,count:6,desc:"6 kariet · lepšia šanca na vzácne",
+   odds:{mythic:5e-7,legend:2e-5,secret:4e-4,ultra:0.01,rare:0.12,uncommon:0.37}},
+  {key:"p3",name:"Elitný box",art:"💎",price:35,count:8,desc:"8 kariet · najväčšia šanca na legendy",
+   odds:{mythic:2e-6,legend:5e-5,secret:1e-3,ultra:0.015,rare:0.20,uncommon:0.40}}
+];
+const QTYS = [1,3,5,10];
+const START = 100;
+const MIN_PRICE = Math.min(...PACKS.map(p=>p.price));
+
+/* ================= STAV ================= */
+const KEY="lovec-kariet-v1";
+function fresh(){return {money:START,album:{},pile:{},packs:0};}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY));
+    if(d&&typeof d.money==="number"&&d.album&&d.pile){
+      // odstráni karty, ktoré už neexistujú
+      for(const bag of [d.album,d.pile]) for(const k of Object.keys(bag)) if(!byId[k]) delete bag[k];
+      d.packs=d.packs||0; return d;
+    }
+  }catch(e){}
+  return fresh();
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let S = load();
+const selQty = {p1:1,p2:1,p3:1};
+let tab="shop";
+let current=null;   // prebiehajúce otváranie
+
+const r2 = v => Math.round(v*100)/100;
+const eur = v => v.toLocaleString("sk-SK",{style:"currency",currency:"EUR",minimumFractionDigits:v<100?2:0,maximumFractionDigits:2});
+const sellPrice = c => r2(c.val*0.7);
+const pct = p => { const x=p*100; return x>=1?x.toFixed(1)+" %":x>=0.01?x.toFixed(2)+" %":"1 : "+Math.round(1/p).toLocaleString("sk-SK"); };
+function albumValue(){return Object.entries(S.album).reduce((s,[k,n])=>s+byId[k].val*n,0);}
+function pileValue(){return r2(Object.entries(S.pile).reduce((s,[k,n])=>s+sellPrice(byId[k])*n,0));}
+const pending = () => current ? current.pending : 0;
+
+/* ================= ŽREBOVANIE ================= */
+function pullTier(odds){
+  const r=Math.random(); let acc=0;
+  for(const t of TIER_ORDER){ if(t==="common") return t; acc+=odds[t]||0; if(r<acc) return t; }
+  return "common";
+}
+function pullCard(odds){
+  const pool=CARDS.filter(c=>c.tier===pullTier(odds));
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+/* ================= VYKRESLENIE ================= */
+function cardHTML(c,extra=""){
+  const T=TIERS[c.tier], E=EL[c.el];
+  return `<div class="card ${T.cls}" style="--el:${E.c}">${extra}<div class="cin">
+    <div class="nm"><span>${c.name}</span><span>${E.i}</span></div>
+    <div class="pic">${c.pic}</div>
+    <div class="meta"><span class="tier">${T.n}</span></div>
+    <div class="val">${eur(c.val)}</div></div></div>`;
+}
+function foilHTML(p){
+  return `<div class="foil ${p.key}"><div class="ftop"></div><div class="fbody">
+    <div class="emb">${p.art}</div><div class="fname">${p.name}</div><div class="fsub">${p.count} kariet</div></div></div>`;
+}
+
+function updateHeader(){
+  document.getElementById("sMoney").textContent=eur(r2(S.money-pending()));
+  document.getElementById("sAlbum").textContent=eur(r2(albumValue()-pending()));
+  document.getElementById("sPacks").textContent=S.packs;
+}
+function render(){
+  updateHeader();
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  const m=document.getElementById("main");
+  if(tab==="shop") m.innerHTML=shopHTML();
+  else if(tab==="album") m.innerHTML=albumHTML();
+  else m.innerHTML=pileHTML();
+  checkRefill();
+}
+
+function shopHTML(){
+  let h=`<p class="hint">Kúp si balíčky a otvor ich. Karty za 5 € a viac idú do albumu <b>a ich hodnota sa ti pripíše do peňazí</b>. Ostatné idú na kôpku. Keď ti zostane menej ako 5 €, dostaneš znova 100 € a album ti zostane. Najvzácnejšia karta má hodnotu <b>${eur(500000)}</b>!</p><div class="packs">`;
+  for(const p of PACKS){
+    const q=selQty[p.key], total=p.price*q;
+    h+=`<div class="pack">${foilHTML(p)}<h3>${p.name}</h3><p>${p.desc}</p>
+      <div class="qty">${QTYS.map(n=>`<button class="${n===q?"on":""}" data-qty="${p.key}:${n}">×${n}</button>`).join("")}</div>
+      <button class="buybtn ${S.money>=total?"primary":""}" data-buy="${p.key}" ${S.money<total?"disabled":""}>
+        Kúpiť ${q>1?q+"× ":""}za ${eur(total)}<small>${S.money<total?"Nemáš dosť peňazí":(q>1?`${eur(p.price)} za kus`:"Klikni a otvor")}</small></button></div>`;
+  }
+  h+=`</div><div class="odds"><h3>🎲 Šanca na kartu (každá karta v balíčku)</h3><table><tr><th>Vzácnosť</th>${PACKS.map(p=>`<th>${p.art} ${p.name.split(" ")[0]} (${eur(p.price)})</th>`).join("")}</tr>`;
+  for(const t of ["rare","ultra","secret","legend","mythic"]){
+    h+=`<tr><td>${TIERS[t].n}</td>${PACKS.map(p=>`<td>${pct(p.odds[t])}</td>`).join("")}</tr>`;
+  }
+  return h+`</table></div>`;
+}
+
+function albumHTML(){
+  const rares=CARDS.filter(isRare);
+  const have=rares.filter(c=>S.album[c.id]).length;
+  let h=`<div class="album-head"><h2>📖 Môj album</h2><div>${have} / ${rares.length} kariet
+    <div class="bar"><i style="width:${have/rares.length*100}%"></i></div></div></div>
+    <p class="hint">Hodnota albumu: <b>${eur(r2(albumValue()))}</b>. Kartu môžeš predať výkupcovi za 70 % hodnoty.</p><div class="grid">`;
+  for(const c of rares){
+    const n=S.album[c.id]||0;
+    if(!n){ h+=`<div class="cardwrap"><div class="card missing"><div class="cin"><div class="nm"><span>???</span></div><div class="pic">?</div><div class="meta"><span></span><span class="tier">${TIERS[c.tier].n}</span></div><div class="val">${eur(c.val)}</div></div></div></div>`; continue; }
+    h+=`<div class="cardwrap">${cardHTML(c, n>1?`<div class="cnt">×${n}</div>`:"")}
+      <button class="sellbtn" data-sell="${c.id}">Predať za ${eur(sellPrice(c))}</button></div>`;
+  }
+  return h+`</div>`;
+}
+
+function pileHTML(){
+  const items=Object.entries(S.pile).filter(([k,n])=>n>0);
+  if(!items.length) return `<div class="empty">Kôpka je prázdna. Bežné karty sa sem dostanú z balíčkov.</div>`;
+  const total=items.reduce((s,[k,n])=>s+n,0);
+  items.sort((a,b)=>byId[b[0]].val-byId[a[0]].val);
+  let h=`<div class="album-head"><h2>🗂️ Kôpka bežných kariet</h2>
+    <button class="primary" data-sellpile="1">Predať všetky (${total} ks) za ${eur(pileValue())}</button></div><div class="grid">`;
+  for(const [k,n] of items) h+=`<div class="cardwrap">${cardHTML(byId[k], n>1?`<div class="cnt">×${n}</div>`:"")}</div>`;
+  return h+`</div>`;
+}
+
+/* ================= NÁKUP A OTVÁRANIE ================= */
+function buy(key){
+  if(current) return;
+  const p=PACKS.find(x=>x.key===key); const q=selQty[key]; const cost=p.price*q;
+  if(S.money<cost) return;
+  S.money=r2(S.money-cost); S.packs+=q;
+  const packs=[]; let bonus=0;
+  for(let n=0;n<q;n++){
+    const cards=Array.from({length:p.count},()=>pullCard(p.odds)).sort((a,b)=>a.val-b.val);
+    const entries=cards.map(c=>{
+      const rare=isRare(c); const isNew=rare && !S.album[c.id];
+      const bag=rare?S.album:S.pile; bag[c.id]=(bag[c.id]||0)+1;
+      if(rare) bonus+=c.val;
+      return {c,rare,isNew,open:false};
+    });
+    packs.push(entries);
+  }
+  S.money=r2(S.money+bonus);   // karty a peniaze sú uložené hneď
+  save();
+  current={pack:p,packs,idx:0,pending:r2(bonus),cost,stage:"pack",token:0};
+  document.getElementById("overlay").classList.add("show");
+  updateHeader();
+  showPack();
+}
+
+function openingShell(title,count){
+  return `<h2>${title}</h2><div class="ocount">${count}</div><div class="stage" id="stage"></div><div class="osum" id="osum"></div><div class="actions" id="oact"></div>`;
+}
+function showPack(){
+  const p=current.pack, total=current.packs.length;
+  current.stage="pack"; current.token++;
+  document.getElementById("opening").innerHTML=openingShell(`${p.art} ${p.name}`, total>1?`Balíček ${current.idx+1} z ${total}`:"");
+  document.getElementById("stage").innerHTML=`<div class="bigwrap" id="bigPack">${foilHTML(p)}<div class="tap">👆 Klikni a roztrhni!</div></div>`;
+  document.getElementById("oact").innerHTML=total>1?`<button id="skipAll">⏭ Preskočiť na súhrn</button>`:"";
+}
+function tearPack(){
+  if(!current||current.stage!=="pack") return;
+  current.stage="tearing"; const tok=++current.token;
+  const bp=document.getElementById("bigPack"); bp.classList.add("tear");
+  setTimeout(()=>{
+    if(!current||current.token!==tok) return;
+    const r=bp.getBoundingClientRect();
+    burst(r.left+r.width/2, r.top+r.height/2, ["#ffcb05","#ffffff","#5aa9ff","#e3350d"], 70, 11);
+    flashScreen();
+  },900);
+  setTimeout(()=>{ if(current&&current.token===tok) showCards(); },1250);
+}
+function showCards(){
+  current.stage="cards"; current.token++;
+  const entries=current.packs[current.idx];
+  document.getElementById("stage").innerHTML=`<div class="reveal">${entries.map((e,i)=>`
+    <div class="flip r-${e.c.tier}" data-flip="${i}" style="animation-delay:${i*90}ms"><div class="rays"></div><div class="inner">
+      <div class="back"><div class="bk"><span>⭐</span></div></div>
+      <div class="front">${e.rare?`<div class="tag ${e.isNew?"new":""}">${e.isNew?"★ NOVÁ KARTA!":"DO ALBUMU"}</div>`:""}${cardHTML(e.c)}</div>
+    </div></div>`).join("")}</div>`;
+  document.getElementById("osum").innerHTML="";
+  document.getElementById("oact").innerHTML=`<button class="gold" id="flipAll">✨ Otočiť všetky</button>${current.packs.length>1?`<button id="skipAll">⏭ Preskočiť na súhrn</button>`:""}`;
+}
+
+function flip(i,tok){
+  if(!current||current.stage!=="cards") return;
+  if(tok!==undefined && tok!==current.token) return;
+  const e=current.packs[current.idx][i]; if(!e||e.open) return;
+  const el=document.querySelector(`[data-flip="${i}"]`); if(!el) return;
+  e.open=true; el.classList.add("open");
+  const c=e.c, t=c.tier, myTok=current.token;
+  if(e.rare){ current.pending=r2(current.pending-c.val); }
+  setTimeout(()=>{
+    if(!current||current.token!==myTok||!document.body.contains(el)) return;
+    const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
+    if(e.rare){
+      el.classList.add("glow");
+      updateHeader(); bumpMoney(); floatMoney("+"+eur(c.val));
+    }
+    if(t==="common"||t==="uncommon") burst(x,y,FX_COLORS[t],12,4);
+    else if(t==="rare") burst(x,y,FX_COLORS.rare,40,8);
+    else if(t==="ultra"){ burst(x,y,FX_COLORS.ultra,70,10); toast("🌟 Ultra vzácna karta: "+c.name+"!"); }
+    else if(t==="secret"){ burst(x,y,FX_COLORS.secret,90,11); rain(FX_COLORS.secret,80); toast("💖 Tajná karta: "+c.name+"!"); }
+    else if(t==="legend"){ flashScreen(); burst(x,y,FX_COLORS.legend,140,13); rain(FX_COLORS.legend,200); toast("🔥 LEGENDÁRNA KARTA! "+c.name+" za "+eur(c.val)+"!"); }
+    else if(t==="mythic"){ flashScreen(); burst(x,y,FX_COLORS.mythic,220,15); rain(FX_COLORS.mythic,400); toast("🌟 NEUVERITEĽNÉ! Mýtická karta za 500 000 €!"); }
+  },380);
+  if(current.packs[current.idx].every(x=>x.open)) packDone();
+}
+function flipAll(){
+  if(!current||current.stage!=="cards") return;
+  const tok=current.token; let d=0;
+  current.packs[current.idx].forEach((e,i)=>{ if(!e.open){ setTimeout(()=>flip(i,tok),d); d+=170; } });
+}
+function packDone(){
+  const entries=current.packs[current.idx];
+  const value=entries.reduce((s,e)=>s+e.c.val,0);
+  const rares=entries.filter(e=>e.rare);
+  const bonus=rares.reduce((s,e)=>s+e.c.val,0);
+  document.getElementById("osum").innerHTML=`Hodnota balíčka: <b>${eur(r2(value))}</b> · ${rares.length?`<b class="g">${rares.length}× do albumu, +${eur(r2(bonus))} do peňazí!</b>`:"Tentoraz žiadna vzácna karta."}`;
+  const last=current.idx>=current.packs.length-1;
+  const multi=current.packs.length>1;
+  document.getElementById("oact").innerHTML= last
+    ? (multi?`<button class="primary" id="toSummary">📊 Súhrn nákupu</button>`:`<button class="primary" id="doneBtn">Hotovo</button><button class="gold" id="againBtn">Kúpiť ďalší za ${eur(current.pack.price)}</button>`)
+    : `<button class="primary" id="nextPack">Ďalší balíček ▶</button><button id="skipAll">⏭ Preskočiť na súhrn</button>`;
+}
+function nextPack(){
+  if(!current) return;
+  current.idx++; showPack();
+}
+function showSummary(){
+  if(!current) return;
+  current.stage="summary"; current.token++;
+  current.pending=0; updateHeader();
+  const all=current.packs.flat(); all.forEach(e=>e.open=true);
+  const value=all.reduce((s,e)=>s+e.c.val,0);
+  const rares=all.filter(e=>e.rare).sort((a,b)=>b.c.val-a.c.val);
+  const bonus=rares.reduce((s,e)=>s+e.c.val,0);
+  const newOnes=rares.filter(e=>e.isNew).length;
+  const p=current.pack;
+  document.getElementById("opening").innerHTML=openingShell("📊 Súhrn nákupu",`${current.packs.length}× ${p.name}`);
+  document.getElementById("stage").innerHTML=`<div class="sumbox">
+    <div class="sumstats">
+      <div>Zaplatené<b>${eur(current.cost)}</b></div>
+      <div>Kariet spolu<b>${all.length}</b></div>
+      <div>Hodnota kariet<b>${eur(r2(value))}</b></div>
+      <div class="plus">Pripísané peniaze<b>+${eur(r2(bonus))}</b></div>
+      <div>Nové do albumu<b>${newOnes}</b></div>
+    </div>
+    ${rares.length?`<div class="grid mini">${rares.map(e=>cardHTML(e.c)).join("")}</div>`:`<p class="hint" style="margin:0">Tentoraz žiadna vzácna karta. Bežné karty nájdeš na kôpke.</p>`}
+  </div>`;
+  document.getElementById("oact").innerHTML=`<button class="primary" id="doneBtn">Hotovo</button>`;
+  if(rares.length){ const top=rares[0].c.tier; if(["secret","legend","mythic"].includes(top)) rain(FX_COLORS[top],250); else rain(["#ffcb05","#ffffff","#5aa9ff","#e3350d"],120); }
+}
+function closeOverlay(){
+  if(current){ current.token++; current.pending=0; }
+  current=null;
+  document.getElementById("overlay").classList.remove("show");
+  render();
+}
+function buyAgain(){
+  const key=current.pack.key; selQty[key]=1;
+  closeOverlay();
+  const p=PACKS.find(x=>x.key===key);
+  if(S.money>=p.price) buy(key);
+}
+
+/* ================= PREDAJ ================= */
+function sellCard(cid){
+  if(!S.album[cid]) return;
+  const c=byId[cid];
+  confirmBox("Predať kartu?",`${c.pic} ${c.name} – dostaneš ${eur(sellPrice(c))}. Karta zmizne z albumu.`,"Predať",()=>{
+    if(!S.album[cid]) return;
+    S.album[cid]--; if(!S.album[cid]) delete S.album[cid];
+    S.money=r2(S.money+sellPrice(c)); save(); render(); bumpMoney(); toast("💰 Predané za "+eur(sellPrice(c)));
+  });
+}
+function sellPile(){
+  const v=pileValue(); if(v<=0) return;
+  S.money=r2(S.money+v); S.pile={}; save(); render(); bumpMoney(); toast("💰 Kôpka predaná za "+eur(v));
+}
+function confirmBox(title,text,okText,onOk){
+  if(current) return;
+  document.getElementById("opening").innerHTML=`<div class="modal"><h2>${title}</h2><p>${text}</p><div class="actions">
+    <button id="cancelBtn">Zrušiť</button><button class="primary" id="okBtn">${okText}</button></div></div>`;
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("okBtn").onclick=()=>{document.getElementById("overlay").classList.remove("show");onOk();};
+  document.getElementById("cancelBtn").onclick=()=>document.getElementById("overlay").classList.remove("show");
+}
+
+/* ================= DOPLNENIE PEŇAZÍ ================= */
+function checkRefill(){
+  if(current) return;
+  if(S.money<MIN_PRICE){
+    S.money=START; save(); updateHeader();
+    if(tab==="shop") document.getElementById("main").innerHTML=shopHTML();
+    bumpMoney(); rain(["#ffcb05","#ffffff","#4cd964"],120);
+    toast("🎉 Mal si menej ako 5 €, dostávaš znova 100 €!");
+  }
+}
+
+/* ================= EFEKTY ================= */
+const cv=document.getElementById("fx"), ctx=cv.getContext("2d");
+let parts=[], running=false;
+function sizeCanvas(){const d=window.devicePixelRatio||1; cv.width=innerWidth*d; cv.height=innerHeight*d; ctx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",sizeCanvas); sizeCanvas();
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function burst(x,y,colors,n,power){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, s=power*(0.35+Math.random()*0.75);
+    parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,g:0.22,drag:0.975,life:60+Math.random()*50,max:110,size:3+Math.random()*5,color:pick(colors),rot:Math.random()*6,vr:(Math.random()-.5)*0.4,star:Math.random()<0.3});
+  }
+  loop();
+}
+function rain(colors,n){
+  for(let i=0;i<n;i++){
+    parts.push({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*0.6,vx:(Math.random()-.5)*2,vy:2+Math.random()*3,g:0.04,drag:0.995,life:260,max:260,size:4+Math.random()*6,color:pick(colors),rot:Math.random()*6,vr:(Math.random()-.5)*0.3,star:false,sway:Math.random()*6});
+  }
+  loop();
+}
+function drawStar(s){ctx.beginPath();for(let k=0;k<10;k++){const r=k%2?s*0.45:s;const a=k*Math.PI/5-Math.PI/2;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}ctx.closePath();ctx.fill();}
+function loop(){
+  if(running) return; running=true;
+  const step=()=>{
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    parts=parts.filter(p=>p.life>0 && p.y<innerHeight+40);
+    for(const p of parts){
+      p.vx*=p.drag; p.vy=p.vy*p.drag+p.g; p.x+=p.vx+(p.sway?Math.sin((p.life+p.sway*10)/18)*0.6:0); p.y+=p.vy; p.rot+=p.vr; p.life--;
+      ctx.save(); ctx.globalAlpha=Math.min(1,p.life/30); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color;
+      if(p.star) drawStar(p.size); else ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+      ctx.restore();
+    }
+    if(parts.length) requestAnimationFrame(step); else { ctx.clearRect(0,0,innerWidth,innerHeight); running=false; }
+  };
+  requestAnimationFrame(step);
+}
+function flashScreen(){const f=document.getElementById("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");}
+function bumpMoney(){const b=document.getElementById("sMoney"); b.classList.add("bump"); setTimeout(()=>b.classList.remove("bump"),250);}
+function floatMoney(text){
+  const r=document.getElementById("sMoney").getBoundingClientRect();
+  const s=document.createElement("div"); s.className="floaty"; s.textContent=text;
+  s.style.left=Math.max(8,r.left-10)+"px"; s.style.top=(r.bottom+6)+"px";
+  document.body.appendChild(s); setTimeout(()=>s.remove(),1400);
+}
+let tt;
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2800);}
+
+/* ================= KLIKANIE ================= */
+document.addEventListener("click",e=>{
+  const T=e.target;
+  const tb=T.closest("[data-tab]"); if(tb){tab=tb.dataset.tab;render();return;}
+  const qb=T.closest("[data-qty]"); if(qb){const [k,n]=qb.dataset.qty.split(":"); selQty[k]=+n; render(); return;}
+  const bb=T.closest("[data-buy]"); if(bb){buy(bb.dataset.buy);return;}
+  if(T.closest("#bigPack")){tearPack();return;}
+  const f=T.closest("[data-flip]"); if(f){flip(+f.dataset.flip);return;}
+  const id=T.closest("button")?.id;
+  if(id==="flipAll"){flipAll();return;}
+  if(id==="nextPack"){nextPack();return;}
+  if(id==="skipAll"||id==="toSummary"){showSummary();return;}
+  if(id==="doneBtn"){closeOverlay();return;}
+  if(id==="againBtn"){buyAgain();return;}
+  const s=T.closest("[data-sell]"); if(s){sellCard(s.dataset.sell);return;}
+  if(T.closest("[data-sellpile]")){sellPile();return;}
+  if(id==="resetBtn"){confirmBox("Nová hra?","Stratíš album aj peniaze a začneš odznova so 100 €.","Začať znova",()=>{S=fresh();save();tab="shop";render();});}
+});
+render();
+</script>
+</body>
+</html>

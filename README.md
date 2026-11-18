@@ -47,8 +47,8 @@ Remember the comma between entries. GitHub Pages republishes in about a minute.
 
 ## Saving Claude artifacts
 
-Copy the artifact's share link and add it as an item with `"type": "artifact"`.
-The artifact must be shared, or only you will be able to open it.
+Saved artifacts live as full copies in `apps/<name>/index.html`, so they work without claude.ai.
+Add one as an item with `"type": "artifact"` and a relative `url` such as `"apps/<name>/"`.
 
 ## Shortcuts
 

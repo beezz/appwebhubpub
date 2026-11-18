@@ -4,7 +4,7 @@
   "items": [
     {
       "title": "Lovec kariet",
-      "url": "https://claude.ai/artifact/51ZDysfCmpp5sviNDam2t8",
+      "url": "apps/lovec-kariet/",
       "type": "artifact",
       "description": "Card-collecting game: buy packs, open them and fill your album (Slovak)",
       "tags": [
@@ -12,20 +12,20 @@
         "kids",
         "slovak"
       ],
-      "host": "Claude artifact",
+      "host": "This site",
       "created": "2026-11-16"
     },
     {
-      "title": "Hainburg – Arbeitsblätter",
-      "url": "https://claude.ai/artifact/U8DXLgErFaZZtLNrShUYXH",
+      "title": "Entdecke Hainburg!",
+      "url": "apps/entdecke-hainburg/",
       "type": "artifact",
-      "description": "Fill-in-the-gap worksheets on Hainburg's history, with answers (German)",
+      "description": "Gap-fill adventure on Hainburg's history: read, remember, fill the gaps (German)",
       "tags": [
         "school",
         "history",
         "german"
       ],
-      "host": "Claude artifact",
+      "host": "This site",
       "created": "2026-11-16"
     }
   ]
