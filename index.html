@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hub</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23384bd6'/><path d='M9 9h6v6H9zM17 9h6v6h-6zM9 17h6v6H9zM17 17h6v6h-6z' fill='white'/></svg>">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#384bd6">
+<meta name="mobile-web-app-capable" content="yes">
 <style>
   :root {
     --bg: #f6f5f1; --card: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --faint: #9a988f;
@@ -131,7 +135,7 @@
 <body>
 <div class="wrap" id="app">
   <header>
-    <div class="logo" id="logo">··</div>
+    <img class="logo" src="icons/icon-192.png" alt="">
     <div>
       <h1 id="title">Hub</h1>
       <div class="sub" id="subtitle"></div>
@@ -149,6 +153,7 @@
     <button class="btn" id="viewBtn" aria-pressed="false" title="Toggle grid or list view">List view</button>
     <button class="btn" id="archBtn" aria-pressed="false">Show archived</button>
     <button class="btn" id="statusBtn" title="Check whether each URL responds">Check status</button>
+    <button class="btn" id="installBtn" hidden>Install app</button>
   </div>
 
   <div class="chips" id="chips" role="toolbar" aria-label="Filters"></div>
@@ -183,7 +188,6 @@ async function load() {
   document.title = d.title || "Hub";
   $("title").textContent = d.title || "Hub";
   $("subtitle").textContent = d.subtitle || "";
-  $("logo").textContent = (d.owner || d.title || "H").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   render();
   detectIcons();
 }
@@ -203,6 +207,7 @@ function matches(it) {
   return true;
 }
 
+const isLocal = (u) => !/^[a-z]+:/i.test(u || "");
 const isImgRef = (v) => /^(https?:|data:image\/)|[\/.]/.test(v);
 const absUrl = (v, base) => { try { return new URL(v, base).href; } catch { return v; } };
 
@@ -219,7 +224,7 @@ function iconHTML(it) {
   const i = (state.data.items || []).indexOf(it);
   const img = (src) => `<img class="fav" src="${esc(src)}" alt="" loading="lazy" data-i="${i}" onerror="iconFail(this)">`;
   if (it.icon) return isImgRef(it.icon) ? img(it.icon) : `<span class="fav-emoji" aria-hidden="true">${esc(it.icon)}</span>`;
-  const local = !/^[a-z]+:/i.test(it.url || "");
+  const local = isLocal(it.url);
   if (local) { const found = state.icons[it.url]; return found ? img(found) : letterIcon(it); }
   const h = host(it.url);
   return h ? img(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64`) : letterIcon(it);
@@ -250,7 +255,7 @@ function card(it) {
   const tags = (it.tags || []).map((t) => `<span class="tag">${esc(t)}</span>`).join("");
   const repo = it.repo ? `<a class="repo" href="${esc(it.repo)}" target="_blank" rel="noopener">repo ↗</a>` : "";
   return `<div class="card${it.archived ? " archived" : ""}">
-    <div class="top">${fav}<a class="title stretch" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a><span class="dot ${dotCls}" title="${dotTitle}"></span></div>
+    <div class="top">${fav}<a class="title stretch" href="${esc(it.url)}"${isLocal(it.url) ? "" : ' target="_blank" rel="noopener"'}>${esc(it.title)}</a><span class="dot ${dotCls}" title="${dotTitle}"></span></div>
     <div class="desc">${esc(it.description || h)}</div>
     <div class="meta"><span class="tag type-${esc(it.type)}">${esc(it.type || "link")}</span>${tags}${repo}<span class="host">${esc(it.host || "")}</span></div>
   </div>`;
@@ -315,8 +320,21 @@ document.addEventListener("keydown", (e) => {
   const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
   if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) { e.preventDefault(); $("q").focus(); $("q").select(); }
   if (e.key === "Escape" && typing) { $("q").value = ""; state.q = ""; $("q").blur(); render(); }
-  if (e.key === "Enter" && document.activeElement === $("q")) { const first = document.querySelector(".card .stretch"); if (first) window.open(first.href, "_blank", "noopener"); }
+  if (e.key === "Enter" && document.activeElement === $("q")) { const first = document.querySelector(".card .stretch"); if (first) { if (first.target) window.open(first.href, "_blank", "noopener"); else location.href = first.href; } }
 });
+
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installPrompt = e; $("installBtn").hidden = false; });
+window.addEventListener("appinstalled", () => { installPrompt = null; $("installBtn").hidden = true; });
+$("installBtn").addEventListener("click", async () => {
+  if (!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null; $("installBtn").hidden = true;
+});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
 
 load();
 </script>

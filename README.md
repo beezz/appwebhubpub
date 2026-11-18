@@ -11,6 +11,19 @@ To publish this repository:
 2. Go to **Settings → Pages**. Under "Build and deployment", set the source to **Deploy from a branch**, choose `main` and `/ (root)`, then save.
 3. After a minute or so, the hub is live at `https://<username>.github.io/<repository>/`.
 
+## Install it as an app (Android)
+
+The hub is a Progressive Web App. On Android, open it in Chrome and tap **Install app**: either the button in the hub's toolbar or the one in Chrome's ⋮ menu.
+It then gets its own home-screen icon, opens full-screen, and works offline:
+
+- The hub and every app in `apps/` are saved on the phone, including apps added later.
+- When you're online, pages and `hub.json` always load fresh, so pushed changes show up right away.
+- External sites still need internet and open in the browser.
+
+On iPhone, use Safari's **Share → Add to Home Screen**.
+
+Files involved: `manifest.webmanifest` (name, colours, icons), `sw.js` (offline support) and `icons/`.
+
 ## Add an item
 
 Open `hub.json` on GitHub, click the pencil icon, and add an entry to `items`:
