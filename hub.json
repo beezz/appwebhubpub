@@ -13,7 +13,8 @@
         "slovak"
       ],
       "host": "This site",
-      "created": "2026-11-16"
+      "created": "2026-11-16",
+      "icon": "🃏"
     },
     {
       "title": "Entdecke Hainburg!",
@@ -26,7 +27,8 @@
         "german"
       ],
       "host": "This site",
-      "created": "2026-11-16"
+      "created": "2026-11-16",
+      "icon": "apps/entdecke-hainburg/icon.jpg"
     }
   ]
 }

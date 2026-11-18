@@ -85,11 +85,12 @@
   .stretch::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
   .card.archived { opacity: .6; }
   .top { display: flex; align-items: center; gap: 10px; }
-  .fav { width: 22px; height: 22px; border-radius: 6px; flex: none; background: var(--bg); object-fit: contain; }
+  .fav { width: 28px; height: 28px; border-radius: 7px; flex: none; background: var(--bg); object-fit: cover; }
   .fav-fallback {
-    width: 22px; height: 22px; border-radius: 6px; flex: none; display: grid; place-items: center;
-    font-size: 12px; font-weight: 600;
+    width: 28px; height: 28px; border-radius: 7px; flex: none; display: grid; place-items: center;
+    font-size: 13px; font-weight: 600;
   }
+  .fav-emoji { width: 28px; height: 28px; border-radius: 7px; flex: none; display: grid; place-items: center; font-size: 19px; line-height: 1; background: var(--bg); }
   .title { font-weight: 600; font-size: 15px; line-height: 1.3; flex: 1; }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); flex: none; }
   .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); }
@@ -156,7 +157,7 @@
 <script>
 const TYPES = { site: "Sites", project: "Projects", artifact: "Artifacts" };
 const ONE = { site: "site", project: "project", artifact: "artifact" };
-const state = { data: null, q: "", type: "all", tag: null, list: false, archived: false, status: {} };
+const state = { icons: {}, data: null, q: "", type: "all", tag: null, list: false, archived: false, status: {} };
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -181,6 +182,7 @@ async function load() {
   $("subtitle").textContent = d.subtitle || "";
   $("logo").textContent = (d.owner || d.title || "H").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   render();
+  detectIcons();
 }
 
 function savePrefs() {
@@ -198,15 +200,50 @@ function matches(it) {
   return true;
 }
 
+const isImgRef = (v) => /^(https?:|data:image\/)|[\/.]/.test(v);
+const absUrl = (v, base) => { try { return new URL(v, base).href; } catch { return v; } };
+
+function letterIcon(it) {
+  return `<span class="fav-fallback type-${esc(it.type)}">${esc((it.title || "?")[0].toUpperCase())}</span>`;
+}
+
+function iconFail(img) {
+  const it = (state.data.items || [])[+img.dataset.i];
+  img.outerHTML = it ? letterIcon(it) : "";
+}
+
+function iconHTML(it) {
+  const i = (state.data.items || []).indexOf(it);
+  const img = (src) => `<img class="fav" src="${esc(src)}" alt="" loading="lazy" data-i="${i}" onerror="iconFail(this)">`;
+  if (it.icon) return isImgRef(it.icon) ? img(it.icon) : `<span class="fav-emoji" aria-hidden="true">${esc(it.icon)}</span>`;
+  const local = !/^[a-z]+:/i.test(it.url || "");
+  if (local) { const found = state.icons[it.url]; return found ? img(found) : letterIcon(it); }
+  const h = host(it.url);
+  return h ? img(`https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64`) : letterIcon(it);
+}
+
+async function detectIcons() {
+  const todo = (state.data.items || []).filter((it) => !it.icon && it.url && !/^[a-z]+:/i.test(it.url) && !(it.url in state.icons));
+  if (!todo.length) return;
+  await Promise.all(todo.map(async (it) => {
+    state.icons[it.url] = null;
+    try {
+      const page = absUrl(it.url, location.href);
+      const html = await (await fetch(page)).text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const link = doc.querySelector('link[rel~="icon"], link[rel="apple-touch-icon"]');
+      if (link && link.getAttribute("href")) state.icons[it.url] = absUrl(link.getAttribute("href"), page);
+    } catch {}
+  }));
+  if (todo.some((it) => state.icons[it.url])) render();
+}
+
 function card(it) {
   const h = host(it.url);
-  const initial = esc((it.title || "?")[0].toUpperCase());
   const st = state.status[it.url];
   const dotCls = st === true ? "ok" : st === false ? "bad" : "";
   const dotTitle = st === true ? "Responding" : st === false ? "Not responding" : "Status not checked";
-  const fav = h
-    ? `<img class="fav" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;fav-fallback type-${esc(it.type)}&quot;>${initial}</span>'">`
-    : `<span class="fav-fallback type-${esc(it.type)}">${initial}</span>`;
+  const fav = iconHTML(it);
   const tags = (it.tags || []).map((t) => `<span class="tag">${esc(t)}</span>`).join("");
   const repo = it.repo ? `<a class="repo" href="${esc(it.repo)}" target="_blank" rel="noopener">repo ↗</a>` : "";
   return `<div class="card${it.archived ? " archived" : ""}">

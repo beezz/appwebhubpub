@@ -40,6 +40,7 @@ Remember the comma between entries. GitHub Pages republishes in about a minute.
 | `description` | no | One short line |
 | `tags` | no | Become filter chips automatically |
 | `host` | no | e.g. GitHub Pages, Vercel, Netlify, Claude artifact |
+| `icon` | no | An emoji (`"🃏"`), an image path (`"apps/game/icon.png"`) or an image URL. Without it, local pages use their own favicon if they have one, external sites use their favicon, and anything else shows the title's first letter |
 | `repo` | no | Adds a small "repo ↗" link to the card |
 | `created` | no | `YYYY-MM-DD`. Newest items are listed first |
 | `pinned` | no | `true` puts it in the Pinned row |
@@ -70,4 +71,4 @@ Then open http://localhost:8000.
 
 - **Check status** pings every URL from your browser. Green means the site answered and red means it didn't.
   It's a rough check: a page that loads but shows an error still counts as green.
-- Favicons come from Google's favicon service. If one can't be found, the card shows the title's first letter instead.
+- Without an `icon`, external sites' favicons come from Google's favicon service. If nothing is found, the card shows the title's first letter.
