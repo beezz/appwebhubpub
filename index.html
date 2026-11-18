@@ -46,7 +46,13 @@
   .sub { color: var(--muted); font-size: 14px; }
   .counts { margin-left: auto; color: var(--faint); font-size: 13px; text-align: right; }
 
-  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .toolbar { position: relative; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .actions { display: contents; }
+  .btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  .btn .ico { display: none; }
+  .btn.more { display: none; width: 42px; padding: 0; place-items: center; }
+  .btn.more svg { stroke-width: 2.6; }
+  [hidden] { display: none !important; }
   .search { position: relative; flex: 1 1 280px; }
   .search input {
     width: 100%; height: 42px; padding: 0 64px 0 14px; font: inherit; color: var(--text);
@@ -127,6 +133,33 @@
   footer { color: var(--faint); font-size: 12px; margin-top: 40px; }
   @media (max-width: 640px) {
     .counts { display: none; }
+    .wrap { padding-top: 24px; }
+    .toolbar { flex-wrap: nowrap; }
+    .search { flex: 1 1 auto; min-width: 0; }
+    .search input { padding-right: 14px; }
+    .kbd { display: none; }
+    .btn.more { display: grid; flex: none; }
+    .btn.more[aria-expanded="true"] { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+    .actions {
+      display: none; position: absolute; right: 0; top: 50px; z-index: 20; min-width: 220px; padding: 6px;
+      background: var(--card); border: 1px solid var(--line-strong); border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.14), 0 2px 6px rgba(0,0,0,.08);
+    }
+    .actions.open { display: block; }
+    .actions .btn {
+      display: flex; align-items: center; gap: 12px; width: 100%; height: 44px; padding: 0 12px;
+      border: 0; border-radius: 9px; background: transparent; text-align: left; font-size: 15px;
+    }
+    .actions .btn:hover, .actions .btn:focus-visible { background: var(--bg); outline: none; }
+    .actions .btn[aria-pressed="true"] { background: transparent; color: var(--accent); }
+    .actions .btn .ico { display: block; color: var(--muted); }
+    .actions .btn[aria-pressed="true"] .ico { color: var(--accent); }
+    .chips {
+      flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      margin: 0 -24px 26px; padding: 0 24px;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip, .chip-sep { flex: none; }
     .list .card { flex-wrap: wrap; } .list .top { flex-basis: 100%; }
   }
   @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
@@ -150,10 +183,13 @@
       <input id="q" type="search" placeholder="Search titles, descriptions, tags" autocomplete="off" aria-label="Search">
       <span class="kbd" aria-hidden="true">/</span>
     </label>
-    <button class="btn" id="viewBtn" aria-pressed="false" title="Toggle grid or list view">List view</button>
-    <button class="btn" id="archBtn" aria-pressed="false">Show archived</button>
-    <button class="btn" id="statusBtn" title="Check whether each URL responds">Check status</button>
-    <button class="btn" id="installBtn" hidden>Install app</button>
+    <button class="btn more" id="moreBtn" aria-label="More options" aria-haspopup="menu" aria-expanded="false" aria-controls="actions"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    <div class="actions" id="actions" role="menu" aria-label="Options">
+      <button class="btn" id="viewBtn" role="menuitem" aria-pressed="false" title="Toggle grid or list view"><span class="ico" id="viewIco"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg></span><span class="lbl">List view</span></button>
+      <button class="btn" id="archBtn" role="menuitem" aria-pressed="false"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1.5"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4"/></svg></span><span class="lbl">Show archived</span></button>
+      <button class="btn" id="statusBtn" role="menuitem" title="Check whether each URL responds"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span><span class="lbl">Check status</span></button>
+      <button class="btn" id="installBtn" role="menuitem" hidden><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg></span><span class="lbl">Install app</span></button>
+    </div>
   </div>
 
   <div class="chips" id="chips" role="toolbar" aria-label="Filters"></div>
@@ -163,6 +199,7 @@
 </div>
 
 <script>
+const ICONS = { list: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>', grid: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>' };
 const TYPES = { site: "Sites", project: "Projects", artifact: "Artifacts" };
 const ONE = { site: "site", project: "project", artifact: "artifact" };
 const state = { icons: {}, data: null, q: "", type: "all", tag: null, list: false, archived: false, status: {} };
@@ -273,7 +310,8 @@ function render() {
     tags.map((t) => `<button class="chip${state.tag === t ? " on" : ""}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("");
 
   $("viewBtn").setAttribute("aria-pressed", state.list);
-  $("viewBtn").textContent = state.list ? "Grid view" : "List view";
+  $("viewBtn").querySelector(".lbl").textContent = state.list ? "Grid view" : "List view";
+  $("viewIco").innerHTML = state.list ? ICONS.grid : ICONS.list;
   $("archBtn").setAttribute("aria-pressed", state.archived);
   $("app").classList.toggle("list", state.list);
 
@@ -291,7 +329,7 @@ function render() {
 
 async function checkStatus() {
   const btn = $("statusBtn");
-  btn.disabled = true; btn.textContent = "Checking…";
+  btn.disabled = true; btn.querySelector(".lbl").textContent = "Checking…";
   const items = (state.data.items || []).filter((i) => i.url);
   await Promise.all(items.map(async (it) => {
     const ctrl = new AbortController();
@@ -302,7 +340,7 @@ async function checkStatus() {
     } catch { state.status[it.url] = false; }
     clearTimeout(timer);
   }));
-  btn.disabled = false; btn.textContent = "Check status";
+  btn.disabled = false; btn.querySelector(".lbl").textContent = "Check status";
   render();
 }
 
@@ -313,12 +351,26 @@ $("chips").addEventListener("click", (e) => {
   if (b.dataset.tag) state.tag = state.tag === b.dataset.tag ? null : b.dataset.tag;
   render();
 });
+const narrow = matchMedia("(max-width: 640px)");
+const setPlaceholder = () => { $("q").placeholder = narrow.matches ? "Search" : "Search titles, descriptions, tags"; };
+narrow.addEventListener("change", () => { setPlaceholder(); setMenu(false); });
+setPlaceholder();
+
+function setMenu(open) {
+  $("actions").classList.toggle("open", open);
+  $("moreBtn").setAttribute("aria-expanded", open);
+  if (open) $("actions").querySelector(".btn:not([hidden])").focus();
+}
+$("moreBtn").addEventListener("click", (e) => { e.stopPropagation(); setMenu(!$("actions").classList.contains("open")); });
+document.addEventListener("click", (e) => { if (!e.target.closest("#actions, #moreBtn")) setMenu(false); });
+$("actions").addEventListener("click", (e) => { if (e.target.closest(".btn")) setMenu(false); });
 $("viewBtn").addEventListener("click", () => { state.list = !state.list; savePrefs(); render(); });
 $("archBtn").addEventListener("click", () => { state.archived = !state.archived; savePrefs(); render(); });
 $("statusBtn").addEventListener("click", checkStatus);
 document.addEventListener("keydown", (e) => {
   const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
   if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) { e.preventDefault(); $("q").focus(); $("q").select(); }
+  if (e.key === "Escape" && $("actions").classList.contains("open")) { setMenu(false); $("moreBtn").focus(); return; }
   if (e.key === "Escape" && typing) { $("q").value = ""; state.q = ""; $("q").blur(); render(); }
   if (e.key === "Enter" && document.activeElement === $("q")) { const first = document.querySelector(".card .stretch"); if (first) { if (first.target) window.open(first.href, "_blank", "noopener"); else location.href = first.href; } }
 });
