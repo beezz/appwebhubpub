@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23384bd6'/><path d='M9 9h6v6H9zM17 9h6v6h-6zM9 17h6v6H9zM17 17h6v6h-6z' fill='white'/></svg>">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --text: #1d1d1b; --muted: #6b6a65; --faint: #9a988f;
+    --line: rgba(0,0,0,.09); --line-strong: rgba(0,0,0,.18);
+    --accent: #384bd6; --accent-bg: #e8ebfd;
+    --site: #6b4fd8; --site-bg: #efeafe;
+    --project: #1f7a52; --project-bg: #e2f4ea;
+    --artifact: #a35a09; --artifact-bg: #fbefdc;
+    --ok: #2e9d5b; --bad: #d4483b; --unknown: #c8c6bd;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161614; --card: #21211e; --text: #ecebe6; --muted: #a3a199; --faint: #75736c;
+      --line: rgba(255,255,255,.09); --line-strong: rgba(255,255,255,.2);
+      --accent: #8d9cff; --accent-bg: #262b4d;
+      --site: #b5a3ff; --site-bg: #2c2545;
+      --project: #7ad3a4; --project-bg: #1c3529;
+      --artifact: #f2b867; --artifact-bg: #3d2d16;
+      --unknown: #4a4944;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+  .logo {
+    width: 44px; height: 44px; border-radius: 12px; background: var(--accent-bg); color: var(--accent);
+    display: grid; place-items: center; font-weight: 600; font-size: 16px; flex: none;
+  }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; }
+  .sub { color: var(--muted); font-size: 14px; }
+  .counts { margin-left: auto; color: var(--faint); font-size: 13px; text-align: right; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .search { position: relative; flex: 1 1 280px; }
+  .search input {
+    width: 100%; height: 42px; padding: 0 64px 0 14px; font: inherit; color: var(--text);
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px; outline: none;
+  }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .kbd {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; color: var(--faint); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px;
+  }
+  .btn {
+    height: 42px; padding: 0 14px; font: inherit; font-size: 14px; color: var(--text); cursor: pointer;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  }
+  .btn:hover { border-color: var(--line-strong); }
+  .btn[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+  .chip {
+    font: inherit; font-size: 13px; padding: 5px 13px; border-radius: 999px; cursor: pointer;
+    background: transparent; color: var(--muted); border: 1px solid var(--line-strong);
+  }
+  .chip:hover { color: var(--text); }
+  .chip.on { background: var(--accent-bg); color: var(--accent); border-color: transparent; }
+  .chip-sep { width: 1px; background: var(--line-strong); margin: 4px 4px; }
+
+  h2 { font-size: 13px; font-weight: 500; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px; }
+  section { margin-bottom: 36px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+
+  .card {
+    position: relative; display: flex; flex-direction: column; gap: 8px; min-height: 150px;
+    padding: 16px 18px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    color: inherit; text-decoration: none; transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+  .card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card:has(.repo:focus-visible) { outline: none; }
+  .stretch { color: inherit; text-decoration: none; outline: none; }
+  .stretch::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+  .card.archived { opacity: .6; }
+  .top { display: flex; align-items: center; gap: 10px; }
+  .fav { width: 22px; height: 22px; border-radius: 6px; flex: none; background: var(--bg); object-fit: contain; }
+  .fav-fallback {
+    width: 22px; height: 22px; border-radius: 6px; flex: none; display: grid; place-items: center;
+    font-size: 12px; font-weight: 600;
+  }
+  .title { font-weight: 600; font-size: 15px; line-height: 1.3; flex: 1; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--unknown); flex: none; }
+  .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); }
+  .desc { color: var(--muted); font-size: 13.5px; flex: 1; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--bg); color: var(--muted); }
+  .type-site { background: var(--site-bg); color: var(--site); }
+  .type-project { background: var(--project-bg); color: var(--project); }
+  .type-artifact { background: var(--artifact-bg); color: var(--artifact); }
+  .host { margin-left: auto; font-size: 12px; color: var(--faint); }
+  .repo { position: relative; z-index: 2; font-size: 12px; color: var(--faint); text-decoration: none; }
+  .repo:hover { color: var(--accent); }
+
+  .list .grid { grid-template-columns: 1fr; gap: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .list .card { flex-direction: row; align-items: center; min-height: 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 12px 16px; gap: 14px; }
+  .list .card:last-child { border-bottom: 0; }
+  .list .card:hover { transform: none; background: var(--bg); }
+  .list .top { flex: 0 0 260px; }
+  .list .desc { font-size: 13px; }
+  .list .meta { flex: none; }
+
+  .empty { color: var(--faint); padding: 40px 0; text-align: center; }
+  .notice {
+    background: var(--artifact-bg); color: var(--artifact); padding: 12px 16px; border-radius: 10px;
+    font-size: 14px; margin-bottom: 24px;
+  }
+  footer { color: var(--faint); font-size: 12px; margin-top: 40px; }
+  @media (max-width: 640px) {
+    .counts { display: none; }
+    .list .card { flex-wrap: wrap; } .list .top { flex-basis: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div class="logo" id="logo">··</div>
+    <div>
+      <h1 id="title">Hub</h1>
+      <div class="sub" id="subtitle"></div>
+    </div>
+    <div class="counts" id="counts"></div>
+  </header>
+
+  <div id="notice"></div>
+
+  <div class="toolbar">
+    <label class="search">
+      <input id="q" type="search" placeholder="Search titles, descriptions, tags" autocomplete="off" aria-label="Search">
+      <span class="kbd" aria-hidden="true">/</span>
+    </label>
+    <button class="btn" id="viewBtn" aria-pressed="false" title="Toggle grid or list view">List view</button>
+    <button class="btn" id="archBtn" aria-pressed="false">Show archived</button>
+    <button class="btn" id="statusBtn" title="Check whether each URL responds">Check status</button>
+  </div>
+
+  <div class="chips" id="chips" role="toolbar" aria-label="Filters"></div>
+
+  <main id="sections"></main>
+  <footer>Edit <code>hub.json</code> to add or change items.</footer>
+</div>
+
+<script>
+const TYPES = { site: "Sites", project: "Projects", artifact: "Artifacts" };
+const ONE = { site: "site", project: "project", artifact: "artifact" };
+const state = { data: null, q: "", type: "all", tag: null, list: false, archived: false, status: {} };
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const host = (u) => { try { return new URL(u).hostname; } catch { return ""; } };
+
+async function load() {
+  try {
+    const res = await fetch("hub.json", { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    state.data = await res.json();
+  } catch (e) {
+    state.data = { title: "Hub", items: [] };
+    $("notice").innerHTML = `<div class="notice">Couldn't load <code>hub.json</code>. If you opened this file directly from your computer, run a local server instead (see README), or check the JSON for typos.</div>`;
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem("hub-prefs") || "{}");
+    state.list = !!saved.list; state.archived = !!saved.archived;
+  } catch {}
+  const d = state.data;
+  document.title = d.title || "Hub";
+  $("title").textContent = d.title || "Hub";
+  $("subtitle").textContent = d.subtitle || "";
+  $("logo").textContent = (d.owner || d.title || "H").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  render();
+}
+
+function savePrefs() {
+  try { localStorage.setItem("hub-prefs", JSON.stringify({ list: state.list, archived: state.archived })); } catch {}
+}
+
+function matches(it) {
+  if (it.archived && !state.archived) return false;
+  if (state.type !== "all" && it.type !== state.type) return false;
+  if (state.tag && !(it.tags || []).includes(state.tag)) return false;
+  if (state.q) {
+    const hay = [it.title, it.description, it.host, it.url, ...(it.tags || [])].join(" ").toLowerCase();
+    return state.q.split(/\s+/).every((w) => hay.includes(w));
+  }
+  return true;
+}
+
+function card(it) {
+  const h = host(it.url);
+  const initial = esc((it.title || "?")[0].toUpperCase());
+  const st = state.status[it.url];
+  const dotCls = st === true ? "ok" : st === false ? "bad" : "";
+  const dotTitle = st === true ? "Responding" : st === false ? "Not responding" : "Status not checked";
+  const fav = h
+    ? `<img class="fav" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(h)}&sz=64" alt="" loading="lazy" onerror="this.outerHTML='<span class=&quot;fav-fallback type-${esc(it.type)}&quot;>${initial}</span>'">`
+    : `<span class="fav-fallback type-${esc(it.type)}">${initial}</span>`;
+  const tags = (it.tags || []).map((t) => `<span class="tag">${esc(t)}</span>`).join("");
+  const repo = it.repo ? `<a class="repo" href="${esc(it.repo)}" target="_blank" rel="noopener">repo ↗</a>` : "";
+  return `<div class="card${it.archived ? " archived" : ""}">
+    <div class="top">${fav}<a class="title stretch" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a><span class="dot ${dotCls}" title="${dotTitle}"></span></div>
+    <div class="desc">${esc(it.description || h)}</div>
+    <div class="meta"><span class="tag type-${esc(it.type)}">${esc(it.type || "link")}</span>${tags}${repo}<span class="host">${esc(it.host || "")}</span></div>
+  </div>`;
+}
+
+function render() {
+  const items = state.data.items || [];
+  const live = items.filter((i) => !i.archived);
+  $("counts").innerHTML = Object.keys(TYPES).map((k) => { const n = live.filter((i) => i.type === k).length; return `${n} ${n === 1 ? ONE[k] : TYPES[k].toLowerCase()}`; }).join(" · ");
+
+  const tags = [...new Set(items.flatMap((i) => i.tags || []))].sort();
+  $("chips").innerHTML =
+    [["all", "All"], ...Object.entries(TYPES)].map(([k, l]) => `<button class="chip${state.type === k ? " on" : ""}" data-type="${k}">${l}</button>`).join("") +
+    (tags.length ? `<span class="chip-sep"></span>` : "") +
+    tags.map((t) => `<button class="chip${state.tag === t ? " on" : ""}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("");
+
+  $("viewBtn").setAttribute("aria-pressed", state.list);
+  $("viewBtn").textContent = state.list ? "Grid view" : "List view";
+  $("archBtn").setAttribute("aria-pressed", state.archived);
+  $("app").classList.toggle("list", state.list);
+
+  const shown = items.filter(matches).sort((a, b) => (b.created || "").localeCompare(a.created || ""));
+  const filtering = state.q || state.type !== "all" || state.tag;
+  const pinned = filtering ? [] : shown.filter((i) => i.pinned);
+  const rest = filtering ? shown : shown.filter((i) => !i.pinned);
+
+  let html = "";
+  if (pinned.length) html += `<section><h2>Pinned</h2><div class="grid">${pinned.map(card).join("")}</div></section>`;
+  if (rest.length) html += `<section><h2>${filtering ? `${shown.length} result${shown.length === 1 ? "" : "s"}` : "Everything"}</h2><div class="grid">${rest.map(card).join("")}</div></section>`;
+  if (!shown.length) html = `<div class="empty">${items.length ? "Nothing matches that." : "No items yet. Add some to hub.json."}</div>`;
+  $("sections").innerHTML = html;
+}
+
+async function checkStatus() {
+  const btn = $("statusBtn");
+  btn.disabled = true; btn.textContent = "Checking…";
+  const items = (state.data.items || []).filter((i) => i.url);
+  await Promise.all(items.map(async (it) => {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      await fetch(it.url, { mode: "no-cors", cache: "no-store", signal: ctrl.signal });
+      state.status[it.url] = true;
+    } catch { state.status[it.url] = false; }
+    clearTimeout(timer);
+  }));
+  btn.disabled = false; btn.textContent = "Check status";
+  render();
+}
+
+$("q").addEventListener("input", (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
+$("chips").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.type) state.type = b.dataset.type;
+  if (b.dataset.tag) state.tag = state.tag === b.dataset.tag ? null : b.dataset.tag;
+  render();
+});
+$("viewBtn").addEventListener("click", () => { state.list = !state.list; savePrefs(); render(); });
+$("archBtn").addEventListener("click", () => { state.archived = !state.archived; savePrefs(); render(); });
+$("statusBtn").addEventListener("click", checkStatus);
+document.addEventListener("keydown", (e) => {
+  const typing = /INPUT|TEXTAREA/.test(document.activeElement.tagName);
+  if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) { e.preventDefault(); $("q").focus(); $("q").select(); }
+  if (e.key === "Escape" && typing) { $("q").value = ""; state.q = ""; $("q").blur(); render(); }
+  if (e.key === "Enter" && document.activeElement === $("q")) { const first = document.querySelector(".card .stretch"); if (first) window.open(first.href, "_blank", "noopener"); }
+});
+
+load();
+</script>
+</body>
+</html>

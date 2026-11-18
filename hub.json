@@ -1,0 +1,66 @@
+{
+  "title": "Web apps hub",
+  "subtitle": "Sites, projects and saved artifacts in one place",
+  "items": [
+    {
+      "title": "Notes artifact",
+      "url": "https://example.com/notes",
+      "type": "artifact",
+      "description": "A saved Claude artifact",
+      "tags": [
+        "notes"
+      ],
+      "host": "Claude artifact",
+      "created": "2026-10-28",
+      "pinned": true
+    },
+    {
+      "title": "Portfolio",
+      "url": "https://example.com",
+      "type": "site",
+      "description": "Personal landing page",
+      "tags": [
+        "personal"
+      ],
+      "host": "GitHub Pages",
+      "repo": "https://github.com/your-username/portfolio",
+      "created": "2026-03-02",
+      "pinned": true
+    },
+    {
+      "title": "Budget tracker",
+      "url": "https://example.com/budget",
+      "type": "project",
+      "description": "Small Next.js app for monthly spending",
+      "tags": [
+        "finance",
+        "tool"
+      ],
+      "host": "Vercel",
+      "created": "2026-05-14"
+    },
+    {
+      "title": "Pomodoro timer",
+      "url": "https://example.com/pomodoro",
+      "type": "site",
+      "description": "Single-file focus timer",
+      "tags": [
+        "tool"
+      ],
+      "host": "GitHub Pages",
+      "created": "2026-01-20"
+    },
+    {
+      "title": "Old weather widget",
+      "url": "https://example.com/weather",
+      "type": "project",
+      "description": "First experiment with a weather API",
+      "tags": [
+        "experiment"
+      ],
+      "host": "Netlify",
+      "created": "2025-09-11",
+      "archived": true
+    }
+  ]
+}
