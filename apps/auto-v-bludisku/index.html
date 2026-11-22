@@ -87,7 +87,7 @@
   <div class="label">Aké príklady?</div>
   <div class="row" id="levels"></div>
   <button class="big" id="btnStart">Štart!</button>
-  <p class="help">Máš 4 rakety 🚀 na policajtov (za každý správny príklad dostaneš ďalšiu) a 3 skoky ⤴️ cez policajné auto.<br>Ovládanie: šípky alebo W A S D, raketa = medzerník, skok = Shift alebo J. Na tablete tlačidlá.</p>
+  <p class="help">Máš 4 rakety 🚀 na policajtov a 3 skoky ⤴️ cez policajné auto. Za každý správny príklad dostaneš 2 rakety a 2 skoky navyše.<br>Ovládanie: šípky alebo W A S D, raketa = medzerník, skok = Shift alebo J. Na tablete tlačidlá.</p>
 </div></div>
 
 <!-- Police -->
@@ -357,8 +357,8 @@ function answer(btn,v){
   if(state!=='cop' || btn.classList.contains('wrong')) return;
   if(v===problem.ans){
     btn.classList.add('right'); sfx.right();
-    rockets++; updateHud();
-    $('copMsg').textContent = (tries===0 ? 'Výborne! Šťastnú cestu! 👍' : 'Správne! Môžeš ísť ďalej.') + ' Dostávaš raketu 🚀';
+    rockets+=2; jumps+=2; updateHud();
+    $('copMsg').textContent = (tries===0 ? 'Výborne! Šťastnú cestu! 👍' : 'Správne! Môžeš ísť ďalej.') + ' Dostávaš 2 rakety 🚀 a 2 skoky ⤴️';
     state='copdone';
     setTimeout(()=>{
       $('ovCop').classList.remove('show');
