@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Auto v bludisku – policajná kontrola</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1d2b3a;--yellow:#ffd23f;--blue:#2f6fde;--red:#ef3e36;--green:#3fbf5f;--panel:#fffdf6}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{font-family:Fredoka,system-ui,sans-serif;color:var(--ink);background:#7ccf6b;user-select:none;-webkit-user-select:none;touch-action:none}
+  #hud{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 12px;background:#1d2b3a;color:#fff;z-index:5;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+  #hud .pill{background:rgba(255,255,255,.12);border-radius:999px;padding:5px 12px;font-weight:600;font-size:17px;white-space:nowrap}
+  #hud button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:6px 12px;background:var(--yellow);color:var(--ink);cursor:pointer}
+  #game{position:fixed;top:52px;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center}
+  canvas{display:block;border-radius:10px;box-shadow:0 6px 0 rgba(0,0,0,.18)}
+  .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(20,30,45,.55);z-index:20;padding:16px}
+  .overlay.show{display:flex}
+  .card{background:var(--panel);border-radius:22px;padding:22px 22px 20px;max-width:520px;width:100%;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.2),0 20px 50px rgba(0,0,0,.35);animation:pop .25s ease-out}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  h1{margin:0 0 4px;font-size:34px}
+  h2{margin:0 0 8px;font-size:26px}
+  p{margin:6px 0 12px;font-size:18px;line-height:1.35}
+  .label{font-weight:600;margin:14px 0 8px;font-size:18px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  .big{font:inherit;font-size:22px;font-weight:700;border:0;border-radius:16px;padding:12px 26px;background:var(--green);color:#fff;cursor:pointer;box-shadow:0 5px 0 #2a8d44;margin-top:16px}
+  .big:active{transform:translateY(3px);box-shadow:0 2px 0 #2a8d44}
+  .choice{font:inherit;font-size:17px;font-weight:600;border:3px solid #d9d3c0;background:#fff;border-radius:14px;padding:8px 14px;cursor:pointer}
+  .choice.sel{border-color:var(--blue);background:#e8f0ff}
+  .swatch{width:54px;height:54px;border-radius:14px;border:4px solid #fff;box-shadow:0 0 0 3px #d9d3c0;cursor:pointer}
+  .swatch.sel{box-shadow:0 0 0 4px var(--blue)}
+  .cop{font-size:56px;line-height:1;margin-bottom:4px;animation:wobble .6s ease-in-out infinite alternate}
+  @keyframes wobble{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+  .problem{font-size:46px;font-weight:700;margin:6px 0 14px;letter-spacing:1px}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .ans{font:inherit;font-size:32px;font-weight:700;border:0;border-radius:16px;padding:14px 0;background:var(--blue);color:#fff;cursor:pointer;box-shadow:0 5px 0 #1f4ea3}
+  .ans:active{transform:translateY(3px);box-shadow:0 2px 0 #1f4ea3}
+  .ans.wrong{background:#c9c9c9;box-shadow:0 5px 0 #9a9a9a;animation:shake .35s}
+  .ans.right{background:var(--green);box-shadow:0 5px 0 #2a8d44}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .msg{min-height:26px;font-weight:600;font-size:19px;margin-top:12px}
+  .help{font-size:15px;opacity:.75}
+  #pad{position:fixed;right:14px;bottom:14px;width:174px;height:174px;z-index:6;display:none}
+  #pad button{position:absolute;width:58px;height:58px;border-radius:16px;border:0;background:rgba(29,43,58,.75);color:#fff;font-size:28px;touch-action:none}
+  #pad button.on{background:rgba(47,111,222,.95)}
+  #pad .u{left:58px;top:0}#pad .d{left:58px;bottom:0}#pad .l{left:0;top:58px}#pad .r{right:0;top:58px}
+  @media (pointer:coarse){#pad{display:block}}
+  @media (max-width:520px){#hud .pill{font-size:14px;padding:4px 8px}h1{font-size:28px}.problem{font-size:40px}}
+</style>
+</head>
+<body>
+<div id="hud">
+  <span class="pill" id="hLevel">Level 1</span>
+  <span class="pill" id="hCoins">🪙 0</span>
+  <span class="pill" id="hStops">👮 0</span>
+  <button id="btnMenu">☰ Menu</button>
+</div>
+<div id="game"><canvas id="c"></canvas></div>
+
+<div id="pad">
+  <button class="u" data-d="up">▲</button>
+  <button class="l" data-d="left">◀</button>
+  <button class="r" data-d="right">▶</button>
+  <button class="d" data-d="down">▼</button>
+</div>
+
+<!-- Start -->
+<div class="overlay show" id="ovStart"><div class="card">
+  <h1>🚗 Auto v bludisku</h1>
+  <p>Dojdi autom do cieľa 🏁 a zbieraj mince. Pozor na policajtov! Keď ťa zastavia, musíš vyriešiť príklad.</p>
+  <div class="label">Vyber si auto</div>
+  <div class="row" id="colors"></div>
+  <div class="label">Aké príklady?</div>
+  <div class="row" id="levels"></div>
+  <button class="big" id="btnStart">Štart!</button>
+  <p class="help">Ovládanie: šípky alebo W A S D. Na tablete tlačidlá vpravo dole.</p>
+</div></div>
+
+<!-- Police -->
+<div class="overlay" id="ovCop"><div class="card">
+  <div class="cop">👮</div>
+  <h2>Stoj! Policajná kontrola!</h2>
+  <p>Ak chceš ísť ďalej, vyrieš tento príklad:</p>
+  <div class="problem" id="problem">3 + 4 = ?</div>
+  <div class="answers" id="answers"></div>
+  <div class="msg" id="copMsg"></div>
+</div></div>
+
+<!-- Level done -->
+<div class="overlay" id="ovWin"><div class="card">
+  <div class="cop">🏁</div>
+  <h2 id="winTitle">Si v cieli!</h2>
+  <p id="winText"></p>
+  <button class="big" id="btnNext">Ďalší level ▶</button>
+</div></div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const cv = $('c'), ctx = cv.getContext('2d');
+
+// ---------- settings ----------
+const COLORS = ['#ef3e36','#ffb100','#3fbf5f','#9b59ff','#ff6fb5','#1fb8d6'];
+const MODES = [
+  {id:'easy', name:'Ľahké (do 20)'},
+  {id:'mid',  name:'Stredné (do 100)'},
+  {id:'hard', name:'Násobilka'}
+];
+const store = {
+  get(k,d){try{const v=localStorage.getItem('avb_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('avb_'+k,JSON.stringify(v))}catch(e){}}
+};
+let carColor = store.get('color', COLORS[0]);
+let mode = store.get('mode', 'easy');
+
+function buildMenu(){
+  const cw = $('colors'); cw.innerHTML='';
+  COLORS.forEach(c=>{
+    const b=document.createElement('div'); b.className='swatch'+(c===carColor?' sel':''); b.style.background=c;
+    b.onclick=()=>{carColor=c;store.set('color',c);buildMenu()}; cw.appendChild(b);
+  });
+  const lw = $('levels'); lw.innerHTML='';
+  MODES.forEach(m=>{
+    const b=document.createElement('button'); b.className='choice'+(m.id===mode?' sel':''); b.textContent=m.name;
+    b.onclick=()=>{mode=m.id;store.set('mode',m.id);buildMenu()}; lw.appendChild(b);
+  });
+}
+buildMenu();
+
+// ---------- sound ----------
+let ac=null;
+function audio(){ if(!ac){ try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){} } return ac; }
+function tone(freq,dur,type='sine',vol=.15,when=0){
+  const a=audio(); if(!a) return;
+  const t=a.currentTime+when, o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur);
+}
+const sfx = {
+  coin(){tone(880,.08,'square',.08);tone(1320,.12,'square',.08,.07)},
+  siren(){for(let i=0;i<4;i++){tone(i%2?650:950,.22,'sawtooth',.07,i*.22)}},
+  right(){[523,659,784,1046].forEach((f,i)=>tone(f,.18,'triangle',.15,i*.09))},
+  wrong(){tone(220,.25,'square',.1);tone(180,.3,'square',.1,.15)},
+  win(){[523,659,784,659,784,1046].forEach((f,i)=>tone(f,.2,'triangle',.15,i*.12))}
+};
+
+// ---------- math ----------
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function makeProblem(){
+  let a,b,op,ans;
+  const m = mode;
+  const r = Math.random();
+  if(m==='easy'){
+    if(r<.55){a=rnd(1,10);b=rnd(1,10);op='+';ans=a+b}
+    else{a=rnd(5,20);b=rnd(1,a);op='−';ans=a-b}
+  } else if(m==='mid'){
+    if(r<.5){a=rnd(10,80);b=rnd(5,100-a);op='+';ans=a+b}
+    else{a=rnd(20,100);b=rnd(5,a);op='−';ans=a-b}
+  } else {
+    if(r<.7){a=rnd(2,10);b=rnd(2,10);op='×';ans=a*b}
+    else{b=rnd(2,10);ans=rnd(2,10);a=b*ans;op=':'}
+  }
+  const set=new Set([ans]);
+  const spread = ans>30?10:4;
+  let guard=0;
+  while(set.size<4 && guard++<100){
+    let d = ans + (Math.random()<.5?-1:1)*rnd(1,spread);
+    if(op==='×' && Math.random()<.4) d = ans + (Math.random()<.5?-a:a);
+    if(d>=0) set.add(d);
+  }
+  const opts=[...set].sort(()=>Math.random()-.5);
+  return {text:`${a} ${op} ${b} = ?`, ans, opts};
+}
+
+// ---------- maze ----------
+let W,H,grid,coins,goal,player,cops,level=1,coinCount=0,stops=0,tile=32,offX=0,offY=0;
+function genMaze(cols,rows){
+  // cols, rows odd. 1 = wall/block, 0 = road
+  const g=Array.from({length:rows},()=>Array(cols).fill(1));
+  const st=[[1,1]]; g[1][1]=0;
+  while(st.length){
+    const [x,y]=st[st.length-1];
+    const n=[[2,0],[-2,0],[0,2],[0,-2]].filter(([dx,dy])=>{
+      const nx=x+dx,ny=y+dy; return nx>0&&ny>0&&nx<cols-1&&ny<rows-1&&g[ny][nx]===1;
+    });
+    if(!n.length){st.pop();continue}
+    const [dx,dy]=n[Math.floor(Math.random()*n.length)];
+    g[y+dy/2][x+dx/2]=0; g[y+dy][x+dx]=0; st.push([x+dx,y+dy]);
+  }
+  // open extra loops so you can drive around police
+  const extra=Math.floor(cols*rows/18);
+  for(let i=0;i<extra;i++){
+    const x=rnd(1,cols-2), y=rnd(1,rows-2);
+    if(g[y][x]!==1) continue;
+    if((x%2===0 && y%2===1 && g[y][x-1]===0 && g[y][x+1]===0) ||
+       (x%2===1 && y%2===0 && g[y-1][x]===0 && g[y+1][x]===0)) g[y][x]=0;
+  }
+  return g;
+}
+const open=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&grid[y][x]===0;
+const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+
+function makeEntity(x,y,speed){return {x,y,tx:x,ty:y,dx:0,dy:0,moving:false,speed,ang:0}}
+
+function startLevel(){
+  const cols = Math.min(11+4*(level-1), 31);
+  const rows = Math.min(9+2*(level-1), 19);
+  W = cols%2?cols:cols+1; H = rows%2?rows:rows+1;
+  grid = genMaze(W,H);
+  player = makeEntity(1,1,4.6);
+  player.ghost = 0;
+  goal = {x:W-2,y:H-2};
+  // coins on random road tiles
+  coins=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(grid[y][x]===0 && !(x<=2&&y<=2) && !(x===goal.x&&y===goal.y) && Math.random()<.16) coins.push({x,y,t:Math.random()*6});
+  }
+  // police far from start
+  cops=[];
+  const nCops = Math.min(1+level, 7);
+  const roads=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++) if(grid[y][x]===0 && x+y>8) roads.push([x,y]);
+  for(let i=0;i<nCops && roads.length;i++){
+    const [x,y]=roads.splice(Math.floor(Math.random()*roads.length),1)[0];
+    const c=makeEntity(x,y,Math.min(2+.25*level,3.6));
+    c.cool=0; c.smart = Math.min(.15+.08*level,.6);
+    cops.push(c);
+  }
+  resize(); updateHud();
+}
+
+// ---------- input ----------
+const held = new Set(); let lastDir=null;
+const keyMap={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
+addEventListener('keydown',e=>{const d=keyMap[e.key]; if(d){held.add(d);lastDir=d;e.preventDefault()}});
+addEventListener('keyup',e=>{const d=keyMap[e.key]; if(d){held.delete(d); if(lastDir===d) lastDir=[...held].pop()||null}});
+document.querySelectorAll('#pad button').forEach(b=>{
+  const d=b.dataset.d;
+  const on=e=>{e.preventDefault();held.add(d);lastDir=d;b.classList.add('on');audio()};
+  const off=e=>{e.preventDefault();held.delete(d);b.classList.remove('on');if(lastDir===d) lastDir=[...held].pop()||null};
+  b.addEventListener('pointerdown',on); b.addEventListener('pointerup',off);
+  b.addEventListener('pointercancel',off); b.addEventListener('pointerleave',off);
+});
+addEventListener('blur',()=>{held.clear();lastDir=null;document.querySelectorAll('#pad button').forEach(b=>b.classList.remove('on'))});
+
+// ---------- movement ----------
+function stepEntity(e,dt,decide){
+  let dist = e.speed*dt;
+  let guard=0;
+  while(dist>0 && guard++<5){
+    if(!e.moving){
+      const d=decide(e,true); if(!d) return;
+      e.dx=d[0];e.dy=d[1];e.tx=e.x+d[0];e.ty=e.y+d[1];e.moving=true;
+    }
+    // allow instant reverse
+    const rev=decide(e,false,true);
+    if(rev && rev[0]===-e.dx && rev[1]===-e.dy){
+      e.tx-=e.dx; e.ty-=e.dy; e.dx=-e.dx; e.dy=-e.dy;
+    }
+    const rx=e.tx-e.x, ry=e.ty-e.y, rem=Math.abs(rx)+Math.abs(ry);
+    if(dist<rem){e.x+=e.dx*dist;e.y+=e.dy*dist;dist=0}
+    else{
+      e.x=e.tx;e.y=e.ty;dist-=rem;e.moving=false;
+      if(e.onArrive) e.onArrive(e);
+    }
+  }
+}
+function playerDecide(e,atCenter,revOnly){
+  const want = lastDir && DIRS[lastDir];
+  if(revOnly) return want;
+  if(!atCenter) return null;
+  if(want && open(e.x+want[0],e.y+want[1])) return want;
+  // keep going straight while a key is held (buffered turn)
+  if(want && (e.dx||e.dy) && open(e.x+e.dx,e.y+e.dy)) return [e.dx,e.dy];
+  return null;
+}
+function copDecide(e,atCenter,revOnly){
+  if(revOnly) return null;
+  const opts=Object.values(DIRS).filter(d=>open(e.x+d[0],e.y+d[1]));
+  if(!opts.length) return null;
+  let fwd=opts.filter(d=>!(d[0]===-e.dx&&d[1]===-e.dy));
+  if(!fwd.length) fwd=opts;
+  if(Math.random()<e.smart){
+    fwd.sort((a,b)=>Math.hypot(e.x+a[0]-player.x,e.y+a[1]-player.y)-Math.hypot(e.x+b[0]-player.x,e.y+b[1]-player.y));
+    return fwd[0];
+  }
+  return fwd[Math.floor(Math.random()*fwd.length)];
+}
+
+// ---------- game state ----------
+let state='menu', copHit=null, problem=null, tries=0;
+function updateHud(){
+  $('hLevel').textContent='Level '+level;
+  $('hCoins').textContent='🪙 '+coinCount;
+  $('hStops').textContent='👮 '+stops;
+}
+function checkPickups(){
+  for(let i=coins.length-1;i>=0;i--){
+    const c=coins[i];
+    if(Math.abs(c.x-player.x)<.5 && Math.abs(c.y-player.y)<.5){coins.splice(i,1);coinCount++;sfx.coin();updateHud()}
+  }
+  if(Math.abs(goal.x-player.x)<.4 && Math.abs(goal.y-player.y)<.4) winLevel();
+  if(player.ghost>0) return;
+  for(const c of cops){
+    if(c.cool>0) continue;
+    if(Math.hypot(c.x-player.x,c.y-player.y)<.75){copStop(c);break}
+  }
+}
+function copStop(c){
+  state='cop'; copHit=c; held.clear(); lastDir=null;
+  document.querySelectorAll('#pad button').forEach(b=>b.classList.remove('on'));
+  sfx.siren(); stops++; updateHud();
+  problem=makeProblem(); tries=0;
+  $('problem').textContent=problem.text;
+  $('copMsg').textContent='';
+  const aw=$('answers'); aw.innerHTML='';
+  problem.opts.forEach(v=>{
+    const b=document.createElement('button'); b.className='ans'; b.textContent=v;
+    b.onclick=()=>answer(b,v); aw.appendChild(b);
+  });
+  $('ovCop').classList.add('show');
+}
+function answer(btn,v){
+  if(state!=='cop' || btn.classList.contains('wrong')) return;
+  if(v===problem.ans){
+    btn.classList.add('right'); sfx.right();
+    $('copMsg').textContent = tries===0 ? 'Výborne! Šťastnú cestu! 👍' : 'Správne! Môžeš ísť ďalej.';
+    state='copdone';
+    setTimeout(()=>{
+      $('ovCop').classList.remove('show');
+      copHit.cool=5; player.ghost=2.5; state='play'; last=performance.now();
+    },1100);
+  } else {
+    tries++; btn.classList.add('wrong'); sfx.wrong();
+    const fine = Math.min(2,coinCount);
+    coinCount-=fine; updateHud();
+    $('copMsg').textContent = fine ? `Nie, to nie je správne. Pokuta ${fine} 🪙. Skús ešte raz!` : 'Nie, to nie je správne. Skús ešte raz!';
+  }
+}
+function winLevel(){
+  state='win'; sfx.win();
+  const best=store.get('best_'+mode,0);
+  if(level>best) store.set('best_'+mode,level);
+  $('winTitle').textContent=`Level ${level} hotový! 🎉`;
+  $('winText').textContent=`Máš ${coinCount} 🪙 a policajti ťa zastavili ${stops}×.`;
+  $('ovWin').classList.add('show');
+}
+$('btnNext').onclick=()=>{ $('ovWin').classList.remove('show'); level++; startLevel(); state='play'; last=performance.now(); };
+$('btnStart').onclick=()=>{ audio(); $('ovStart').classList.remove('show'); level=1;coinCount=0;stops=0; startLevel(); state='play'; last=performance.now(); };
+$('btnMenu').onclick=()=>{ if(state==='cop'||state==='copdone') return; state='menu'; $('ovWin').classList.remove('show'); buildMenu(); $('ovStart').classList.add('show'); };
+
+// ---------- drawing ----------
+function resize(){
+  const box=$('game').getBoundingClientRect();
+  const pad=10;
+  tile=Math.max(10,Math.floor(Math.min((box.width-pad*2)/(W||11),(box.height-pad*2)/(H||9))));
+  const dpr=window.devicePixelRatio||1;
+  cv.width=W*tile*dpr; cv.height=H*tile*dpr;
+  cv.style.width=W*tile+'px'; cv.style.height=H*tile+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+addEventListener('resize',()=>{ if(grid) resize(); });
+
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+
+// deterministic decoration per tile
+const hash=(x,y)=>{let h=x*374761393+y*668265263+level*1442695;h=(h^(h>>13))*1274126177;return ((h^(h>>16))>>>0)/4294967295};
+
+function drawMap(time){
+  ctx.fillStyle='#6cc25b'; ctx.fillRect(0,0,W*tile,H*tile);
+  // roads
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(grid[y][x]===0){ctx.fillStyle='#5b6270';ctx.fillRect(x*tile,y*tile,tile+.5,tile+.5)}
+  }
+  // lane dashes
+  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=Math.max(1,tile*.06); ctx.setLineDash([tile*.22,tile*.22]);
+  ctx.beginPath();
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(grid[y][x]) continue;
+    const cx=x*tile+tile/2, cy=y*tile+tile/2;
+    if(open(x+1,y)){ctx.moveTo(cx,cy);ctx.lineTo(cx+tile,cy)}
+    if(open(x,y+1)){ctx.moveTo(cx,cy);ctx.lineTo(cx,cy+tile)}
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+  // blocks: grass with houses / trees
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    if(!grid[y][x]) continue;
+    const px=x*tile, py=y*tile, h=hash(x,y);
+    if(h<.28 && x>0&&y>0&&x<W-1&&y<H-1){ // house
+      const roof=['#d9534f','#e8963a','#8e6cd1','#3c8dbc'][Math.floor(h*14)%4];
+      ctx.fillStyle='rgba(0,0,0,.15)';rr(px+tile*.18,py+tile*.2,tile*.7,tile*.7,tile*.1);ctx.fill();
+      ctx.fillStyle=roof;rr(px+tile*.14,py+tile*.14,tile*.7,tile*.7,tile*.1);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(px+tile*.14,py+tile*.47,tile*.7,tile*.05);
+    } else if(h<.7){ // tree
+      const r=tile*(.22+h*.12);
+      ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.arc(px+tile/2+3,py+tile/2+3,r,0,7);ctx.fill();
+      ctx.fillStyle=h<.5?'#2f9e44':'#3fae4f';ctx.beginPath();ctx.arc(px+tile/2,py+tile/2,r,0,7);ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.arc(px+tile/2-r*.3,py+tile/2-r*.3,r*.4,0,7);ctx.fill();
+    } else if(h<.78){ // flowers
+      ctx.fillStyle=h<.74?'#ffd23f':'#ff6fb5';
+      for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(px+tile*(.25+i*.25),py+tile*(.3+((i*7)%3)*.2),tile*.06,0,7);ctx.fill()}
+    }
+  }
+  // start
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(1*tile,1*tile,tile,tile);
+  // goal checkered
+  const gx=goal.x*tile, gy=goal.y*tile, n=4, s=tile/n;
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){ctx.fillStyle=(i+j)%2?'#222':'#fff';ctx.fillRect(gx+i*s,gy+j*s,s+.5,s+.5)}
+  const bob=Math.sin(time*4)*tile*.05;
+  ctx.font=`${tile*.75}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🏁',gx+tile/2,gy+tile/2+bob);
+  // coins
+  for(const c of coins){
+    const sc=Math.abs(Math.cos(time*3+c.t));
+    const cx=c.x*tile+tile/2, cy=c.y*tile+tile/2, r=tile*.2;
+    ctx.fillStyle='#e0a400';ctx.beginPath();ctx.ellipse(cx,cy,r*Math.max(.2,sc),r,0,0,7);ctx.fill();
+    ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.ellipse(cx,cy,r*.75*Math.max(.2,sc),r*.75,0,0,7);ctx.fill();
+  }
+}
+
+function drawCar(e,body,isCop,time,alpha){
+  const cx=e.x*tile+tile/2, cy=e.y*tile+tile/2;
+  ctx.save(); ctx.globalAlpha=alpha; ctx.translate(cx,cy); ctx.rotate(e.ang);
+  const L=tile*.78, Wd=tile*.5;
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.25)';rr(-L/2+2,-Wd/2+3,L,Wd,Wd*.3);ctx.fill();
+  // wheels
+  ctx.fillStyle='#1b1b1b';
+  [[-L*.3,-Wd*.55],[L*.22,-Wd*.55],[-L*.3,Wd*.55-Wd*.18],[L*.22,Wd*.55-Wd*.18]].forEach(([x,y])=>{rr(x,y,L*.18,Wd*.18,2);ctx.fill()});
+  // body
+  ctx.fillStyle=body;rr(-L/2,-Wd/2,L,Wd,Wd*.3);ctx.fill();
+  if(isCop){ctx.fillStyle='#2f6fde';ctx.fillRect(-L*.12,-Wd/2,L*.24,Wd)}
+  // windows
+  ctx.fillStyle='#bfe3ff';rr(L*.05,-Wd*.36,L*.2,Wd*.72,3);ctx.fill();
+  ctx.fillStyle='#9ccbe8';rr(-L*.36,-Wd*.32,L*.13,Wd*.64,3);ctx.fill();
+  // roof
+  ctx.fillStyle='rgba(255,255,255,.18)';rr(-L*.2,-Wd*.34,L*.24,Wd*.68,3);ctx.fill();
+  // headlights
+  ctx.fillStyle='#fff6b0';
+  ctx.beginPath();ctx.arc(L*.47,-Wd*.3,Wd*.09,0,7);ctx.arc(L*.47,Wd*.3,Wd*.09,0,7);ctx.fill();
+  if(isCop){
+    const on=e.cool>0?-1:Math.floor(time*6)%2;
+    ctx.fillStyle=on===0?'#ff2b2b':on===1?'#7a1d1d':'#777';ctx.fillRect(-L*.1,-Wd*.3,L*.2,Wd*.28);
+    ctx.fillStyle=on===1?'#2b8bff':on===0?'#1d3a7a':'#999';ctx.fillRect(-L*.1,Wd*.02,L*.2,Wd*.28);
+    if(on>=0){
+      ctx.globalAlpha=alpha*.25;ctx.fillStyle=on===0?'#ff2b2b':'#2b8bff';
+      ctx.beginPath();ctx.arc(0,0,tile*.7,0,7);ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function turnAngle(e,dt){
+  if(!(e.dx||e.dy)) return;
+  const target=Math.atan2(e.dy,e.dx);
+  let d=target-e.ang; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+  e.ang+=d*Math.min(1,dt*14);
+}
+
+// ---------- loop ----------
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  const time=now/1000;
+  if(grid){
+    if(state==='play'){
+      stepEntity(player,dt,playerDecide);
+      for(const c of cops){ stepEntity(c,dt,copDecide); if(c.cool>0)c.cool-=dt; }
+      if(player.ghost>0) player.ghost-=dt;
+      checkPickups();
+    }
+    turnAngle(player,dt); cops.forEach(c=>turnAngle(c,dt));
+    drawMap(time);
+    for(const c of cops) drawCar(c,'#f4f4f4',true,time,c.cool>0?.6:1);
+    const blink = player.ghost>0 && Math.floor(time*10)%2 ? .45 : 1;
+    drawCar(player,carColor,false,time,blink);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

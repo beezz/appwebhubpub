@@ -43,6 +43,21 @@
       "host": "This site",
       "created": "2026-11-18",
       "icon": "📚"
+    },
+    {
+      "title": "Auto v bludisku",
+      "url": "apps/auto-v-bludisku/",
+      "type": "artifact",
+      "description": "Drive a car through a maze from above; police stop you and you must solve a math problem (Slovak)",
+      "tags": [
+        "games",
+        "kids",
+        "math",
+        "slovak"
+      ],
+      "host": "This site",
+      "created": "2026-11-22",
+      "icon": "🚓"
     }
   ]
 }
