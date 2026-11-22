@@ -20,11 +20,12 @@
       "title": "Entdecke Hainburg!",
       "url": "apps/entdecke-hainburg/",
       "type": "artifact",
-      "description": "Gap-fill adventure on Hainburg's history: read, remember, fill the gaps (German)",
+      "description": "Gap-fill adventure on Hainburg's history, plus a walk through the real town map to find the stations (German)",
       "tags": [
-        "school",
+        "german",
         "history",
-        "german"
+        "map",
+        "school"
       ],
       "host": "This site",
       "created": "2026-11-16",
