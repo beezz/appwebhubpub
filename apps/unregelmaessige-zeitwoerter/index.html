@@ -17,6 +17,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,syst
 body{min-height:100vh;display:flex;justify-content:center}
 .app{width:100%;max-width:520px;padding:18px 16px 40px}
 h1{font-size:1.35rem;margin:4px 0 2px;font-weight:900}
+h2{font-size:1.3rem;margin:6px 0;font-weight:900}
 .sub{color:var(--muted);margin:0 0 16px;font-size:.95rem}
 .panel{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 2px 0 var(--line),0 6px 24px rgba(0,0,0,.05);margin-bottom:14px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
@@ -28,6 +29,7 @@ h1{font-size:1.35rem;margin:4px 0 2px;font-weight:900}
 .big.blue{background:var(--accent2);box-shadow:0 4px 0 #2a5ca3}
 .big.green{background:var(--good);box-shadow:0 4px 0 #1b7a42}
 .big.red{background:var(--bad);box-shadow:0 4px 0 #a92e25}
+.big.purple{background:#7b4fd6;box-shadow:0 4px 0 #5a35a8}
 .big:disabled{opacity:.45;cursor:default}
 .ghost{background:none;border:0;color:var(--accent2);font:inherit;font-weight:700;cursor:pointer;padding:8px}
 .stats{display:flex;gap:10px;text-align:center}
@@ -41,11 +43,11 @@ h1{font-size:1.35rem;margin:4px 0 2px;font-weight:900}
 .sk{text-align:center;font-size:1.05rem;color:var(--accent);font-weight:700;margin:0 0 4px}
 .sk::before{content:"🇸🇰 "}
 td .skt{display:block;font-size:.78rem;color:var(--muted)}
-.ask{text-align:center;font-size:.95rem;color:var(--muted);margin-bottom:14px}
+.ask{text-align:center;font-size:.95rem;color:var(--muted);margin-bottom:10px}
+.say{display:block;margin:0 auto 6px;background:#e8f0fc;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;color:var(--accent2);cursor:pointer}
 
 .sec{border-top:2px dashed var(--line);padding:12px 0 6px}
 .sec h3{margin:0 0 8px;font-size:1rem;font-weight:900;color:var(--accent2)}
-.sec h3 small{color:var(--muted);font-weight:700}
 .auxbox{background:var(--soft);border:2px dashed #f3c98f;border-radius:16px;padding:8px 10px 10px;margin:0 auto;max-width:260px}
 .aux{display:flex;gap:10px}
 .mini{margin:0 0 6px;font-size:.8rem;font-weight:700;color:var(--muted);text-align:center}
@@ -76,6 +78,21 @@ th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
 .done .emoji{font-size:4rem}
 .legend{font-size:.8rem;color:var(--muted);margin-top:8px}
 .confirm{background:#fde7e5;border-radius:14px;padding:12px;margin-top:10px;text-align:center}
+
+/* Spiel */
+.hud{font-weight:900;color:var(--ink);font-size:.95rem}
+.stage{position:relative;margin:0 auto;border-radius:16px;overflow:hidden;touch-action:none;background:#1d2340}
+#cv{display:block;touch-action:none}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,24,48,.72);padding:16px}
+.ovbox{background:#fff;border-radius:20px;padding:18px;text-align:center;max-width:320px;width:100%}
+.ovbox p{color:var(--muted);margin:4px 0 14px}
+.dpad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:8px;justify-content:center;margin-top:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+.dpad button{font-size:1.6rem;border:0;border-radius:16px;background:#fff;box-shadow:0 3px 0 var(--line);cursor:pointer;color:var(--accent2);touch-action:none}
+.dpad button:active{background:#e8f0fc}
+.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .down{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}
+.qov{position:fixed;inset:0;background:rgba(20,24,48,.6);overflow-y:auto;z-index:10;display:flex;justify-content:center;padding:14px}
+.qov .panel{max-width:500px;width:100%;margin:auto 0;height:max-content}
+.caught{text-align:center;font-weight:900;color:var(--bad);margin:0}
 </style>
 </head>
 <body>
@@ -113,6 +130,13 @@ th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
 
   <button class="big" id="go">Los geht's!</button>
   <p style="text-align:center"><button class="ghost" id="extra">Alle Zeitwörter noch einmal üben</button></p>
+
+  <div class="panel" style="margin-top:10px;text-align:center">
+    <div style="font-size:2rem">👻 😀 👾</div>
+    <p style="margin:4px 0 12px;color:var(--muted);font-weight:700">Lauf durchs Labyrinth – wenn dich ein Monster fängt, übst du ein Zeitwort!</p>
+    <button class="big purple" id="openGame">🎮 Monster-Labyrinth</button>
+  </div>
+
   <p style="text-align:center"><button class="ghost" id="showOverview">📋 Fortschritt ansehen</button></p>
 </section>
 
@@ -126,25 +150,11 @@ th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
   <div class="panel">
     <div class="verb" id="qVerb"></div>
     <div class="sk" id="qSk"></div>
+    <button class="say ttsOnly" id="qSay">🔊 Anhören</button>
     <div class="ask">Wie heißen die Formen? (er / sie …)</div>
 
-    <!-- Auswählen -->
-    <div id="pickArea">
-      <div class="sec"><h3>Mitvergangenheit</h3><div class="opts" id="oMv"></div></div>
-      <div class="sec"><h3>Vergangenheit</h3>
-        <div class="auxbox">
-          <p class="mini">① hat oder ist?</p>
-          <div class="aux" id="oAux"></div>
-        </div>
-        <div class="plus">+</div>
-        <p class="mini">② Welches Wort?</p>
-        <div class="opts" id="oVg"></div>
-      </div>
-      <div class="sec"><h3>Zukunft</h3><div class="opts" id="oZk"></div></div>
-      <button class="big blue" id="pickCheck" disabled>Prüfen</button>
-    </div>
+    <div id="pickArea"></div>
 
-    <!-- Aufdecken -->
     <div id="flipArea">
       <button class="big blue" id="reveal">Aufdecken</button>
     </div>
@@ -159,6 +169,35 @@ th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
     <div id="nextArea" class="hidden">
       <button class="big" id="next">Weiter ➜</button>
     </div>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="hidden">
+  <div class="topbar">
+    <button class="ghost" id="gQuit">✕ Beenden</button>
+    <span class="hud" id="hud"></span>
+  </div>
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div class="ov" id="ovStart"><div class="ovbox">
+      <div style="font-size:2.4rem">👻 😀 👾</div>
+      <h2>Monster-Labyrinth</h2>
+      <p>Sammle alle Punkte! Wenn dich ein Monster fängt, musst du ein Zeitwort üben. Steuern: wischen oder Pfeile.</p>
+      <button class="big purple" id="gStart">Start</button>
+    </div></div>
+    <div class="ov hidden" id="ovLevel"><div class="ovbox">
+      <div style="font-size:3rem">🏆</div>
+      <h2 id="lvTitle"></h2>
+      <p id="lvText"></p>
+      <button class="big purple" id="gNextLv">Weiter</button>
+    </div></div>
+  </div>
+  <div class="dpad">
+    <button class="up" data-d="up">▲</button>
+    <button class="left" data-d="left">◀</button>
+    <button class="down" data-d="down">▼</button>
+    <button class="right" data-d="right">▶</button>
   </div>
 </section>
 
@@ -193,6 +232,19 @@ th{font-size:.72rem;color:var(--muted);text-transform:uppercase}
   </div>
 </section>
 
+</div>
+
+<!-- Monster hat dich gefangen -->
+<div class="qov hidden" id="gq">
+  <div class="panel">
+    <p class="caught" id="gCaught"></p>
+    <div class="verb" id="gVerb"></div>
+    <div class="sk" id="gSk"></div>
+    <button class="say ttsOnly" id="gSay">🔊 Nochmal hören</button>
+    <div id="gPick"></div>
+    <div id="gFb" class="hidden"></div>
+    <button class="big purple hidden" id="gCont">Weiter spielen ➜</button>
+  </div>
 </div>
 
 <script>
@@ -230,11 +282,11 @@ const MAXBOX = 5, NEW_PER_DAY = 8, SESSION_MAX = 15;
 
 // ---------- Speicher ----------
 const KEY = "uzw-leitner-v2";
-let S = {cards:{}, sheet:"all", mode:"flip", lastDay:null, streak:0, newToday:0, newDay:null};
+let S = {cards:{}, sheet:"all", mode:"flip", lastDay:null, streak:0, newToday:0, newDay:null, best:0};
 try {
   const raw = localStorage.getItem(KEY);
   if (raw) S = Object.assign(S, JSON.parse(raw));
-  else { // alten Stand (eine Karte je Form) übernehmen
+  else {
     const old = JSON.parse(localStorage.getItem("uzw-leitner-v1")||"null");
     if (old){
       Object.assign(S, {sheet:old.sheet||"all", lastDay:old.lastDay, streak:old.streak||0});
@@ -256,8 +308,31 @@ function newCards(){ return allCards().filter(id=>!S.cards[id]); }
 function newLeft(){ if (S.newDay!==today()){ S.newDay=today(); S.newToday=0; } return Math.max(0, NEW_PER_DAY - S.newToday); }
 
 const $ = id => document.getElementById(id);
-function show(sec){ ["start","quiz","done","overview"].forEach(s=>$(s).classList.toggle("hidden", s!==sec)); window.scrollTo(0,0); }
+function show(sec){ ["start","quiz","game","done","overview"].forEach(s=>$(s).classList.toggle("hidden", s!==sec)); window.scrollTo(0,0); }
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// ---------- Vorlesen (Sprachausgabe des Geräts) ----------
+const TTS = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+let deVoice = null;
+function loadVoices(){
+  if (!TTS) return;
+  const vs = speechSynthesis.getVoices();
+  deVoice = vs.find(v=>/^de[-_]AT/i.test(v.lang)) || vs.find(v=>/^de[-_]DE/i.test(v.lang)) || vs.find(v=>/^de/i.test(v.lang)) || null;
+}
+if (TTS){ loadVoices(); try{ speechSynthesis.onvoiceschanged = loadVoices; }catch(e){} }
+else document.querySelectorAll(".ttsOnly").forEach(b=>b.classList.add("hidden"));
+function say(text){
+  if (!TTS) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = deVoice ? deVoice.lang : "de-DE";
+    if (deVoice) u.voice = deVoice;
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function sayForms(v){ say(v[0]+". er "+v[1]+". er "+v[2]+". er wird "+v[0]+"."); }
 
 // ---------- Startseite ----------
 function renderStart(){
@@ -274,35 +349,7 @@ function renderStart(){
 document.querySelectorAll("#sheetSel .chip").forEach(b=>b.onclick=()=>{S.sheet=b.dataset.v; save(); renderStart();});
 document.querySelectorAll("#modeSel .chip").forEach(b=>b.onclick=()=>{S.mode=b.dataset.v; save(); renderStart();});
 
-// ---------- Ablauf ----------
-let queue=[], total=0, doneCount=0, cur=null, right=0, wrong=0, extraMode=false;
-
-function startSession(extra){
-  extraMode = extra;
-  if (extra) queue = shuffle(allCards()).slice(0, SESSION_MAX);
-  else queue = shuffle(shuffle(dueCards()).concat(newCards().slice(0, newLeft()))).slice(0, SESSION_MAX);
-  total = queue.length; doneCount=0; right=0; wrong=0;
-  if (!total) return;
-  show("quiz"); nextCard();
-}
-
-function V(){ return VERBS[+cur]; }
 function parts(v){ return {mv:v[1], aux:v[2].split(" ")[0], vg:v[2].split(" ").slice(1).join(" "), zk:"wird "+v[0]}; }
-
-function nextCard(){
-  if (!queue.length) return finish();
-  cur = queue.shift();
-  $("qVerb").textContent = V()[0];
-  $("qSk").textContent = V()[4];
-  $("counter").textContent = (doneCount+1)+" / "+total;
-  $("bar").style.width = (doneCount/total*100)+"%";
-  $("fb").className="hidden"; $("selfGrade").classList.add("hidden"); $("nextArea").classList.add("hidden");
-  $("pickArea").classList.toggle("hidden", S.mode!=="pick");
-  $("flipArea").classList.toggle("hidden", S.mode!=="flip");
-  if (S.mode==="pick") renderPick();
-  window.scrollTo(0,0);
-}
-
 function fullRow(v){
   return '<div class="fullrow">'+
     '<div><small>Nennform</small>'+v[0]+'<small>'+v[4]+'</small></div>'+
@@ -310,7 +357,6 @@ function fullRow(v){
     '<div><small>Verg.</small>'+v[2]+'</div>'+
     '<div><small>Zukunft</small>wird '+v[0]+'</div></div>';
 }
-function showFeedback(cls, msg){ const fb=$("fb"); fb.className="feedback "+cls; fb.innerHTML = msg + fullRow(V()); }
 
 // ---------- falsche Antworten erzeugen ----------
 const VG_RE=/(ie|ei|au|äu|eu|[aeiouäöü])/g;
@@ -346,52 +392,83 @@ function options(v, f){
   return shuffle([P.zk].concat(pick3(P.zk, null, rest)));
 }
 
-// ---------- Auswählen ----------
-let sel={};
-function makeOpts(box, list, key){
-  box.innerHTML="";
-  list.forEach(o=>{
-    const b=document.createElement("button"); b.className="opt"; b.textContent=o; b.dataset.val=o; b.dataset.key=key;
-    b.onclick=()=>{ sel[key]=o; box.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel", x===b)); $("pickCheck").disabled = Object.values(sel).some(x=>x===null); };
-    box.appendChild(b);
-  });
-}
-function renderPick(){
-  const v=V(); sel={mv:null, aux:null, vg:null, zk:null};
-  makeOpts($("oMv"), options(v,"mv"), "mv");
-  makeOpts($("oAux"), ["hat","ist"], "aux");
-  makeOpts($("oVg"), options(v,"vg"), "vg");
-  makeOpts($("oZk"), options(v,"zk"), "zk");
-  $("pickCheck").disabled=true; $("pickCheck").classList.remove("hidden");
-}
-function checkPick(){
-  const P=parts(V());
-  document.querySelectorAll("#pickArea .opt").forEach(b=>{
-    b.disabled=true; b.classList.remove("sel");
-    const k=b.dataset.key, val=b.dataset.val;
-    if (val===P[k]) b.classList.add("right"); else if (val===sel[k]) b.classList.add("wrong");
-  });
-  const wrongs = Object.keys(sel).filter(k=>sel[k]!==P[k]);
-  const ok = !wrongs.length;
-  let msg = "Alles richtig! 🎉";
-  if (!ok){
-    const names={mv:"Mitvergangenheit", aux:"hat / ist", vg:"Vergangenheit", zk:"Zukunft"};
-    msg = "Schau noch einmal: " + wrongs.map(k=>names[k]).filter((x,i,a)=>a.indexOf(x)===i).join(", ");
-  }
-  $("pickCheck").classList.add("hidden");
-  showFeedback(ok?"ok":"no", msg);
-  grade(ok);
-  $("nextArea").classList.remove("hidden");
-}
-$("pickCheck").onclick=checkPick;
+// ---------- Auswählen (für Üben und Spiel) ----------
+const PICK_HTML =
+  '<div class="sec"><h3>Mitvergangenheit</h3><div class="opts oMv"></div></div>'+
+  '<div class="sec"><h3>Vergangenheit</h3>'+
+    '<div class="auxbox"><p class="mini">① hat oder ist?</p><div class="aux oAux"></div></div>'+
+    '<div class="plus">+</div><p class="mini">② Welches Wort?</p><div class="opts oVg"></div></div>'+
+  '<div class="sec"><h3>Zukunft</h3><div class="opts oZk"></div></div>'+
+  '<button class="big blue pickCheck" disabled>Prüfen</button>';
+const NAMES={mv:"Mitvergangenheit", aux:"hat / ist", vg:"Vergangenheit", zk:"Zukunft"};
+function wrongMsg(w){ return "Schau noch einmal: " + w.map(k=>NAMES[k]).join(", "); }
 
-// ---------- Aufdecken ----------
+function setupPick(root, v, onChecked){
+  root.innerHTML = PICK_HTML;
+  const sel = {mv:null, aux:null, vg:null, zk:null}, btn = root.querySelector(".pickCheck");
+  const mk = (cls, list, key) => {
+    const box = root.querySelector(cls);
+    list.forEach(o=>{
+      const b=document.createElement("button"); b.className="opt"; b.textContent=o; b.dataset.val=o; b.dataset.key=key;
+      b.onclick=()=>{ sel[key]=o; box.querySelectorAll(".opt").forEach(x=>x.classList.toggle("sel", x===b)); btn.disabled = Object.values(sel).some(x=>x===null); };
+      box.appendChild(b);
+    });
+  };
+  mk(".oMv", options(v,"mv"), "mv");
+  mk(".oAux", ["hat","ist"], "aux");
+  mk(".oVg", options(v,"vg"), "vg");
+  mk(".oZk", options(v,"zk"), "zk");
+  btn.onclick = () => {
+    const P = parts(v);
+    root.querySelectorAll(".opt").forEach(b=>{
+      b.disabled=true; b.classList.remove("sel");
+      const k=b.dataset.key, val=b.dataset.val;
+      if (val===P[k]) b.classList.add("right"); else if (val===sel[k]) b.classList.add("wrong");
+    });
+    btn.classList.add("hidden");
+    const wrongs = Object.keys(sel).filter(k=>sel[k]!==P[k]);
+    onChecked(!wrongs.length, wrongs);
+  };
+}
+
+// ---------- Üben (Lernkartei) ----------
+let queue=[], total=0, doneCount=0, cur=null, right=0, wrong=0, extraMode=false;
+
+function startSession(extra){
+  extraMode = extra;
+  if (extra) queue = shuffle(allCards()).slice(0, SESSION_MAX);
+  else queue = shuffle(shuffle(dueCards()).concat(newCards().slice(0, newLeft()))).slice(0, SESSION_MAX);
+  total = queue.length; doneCount=0; right=0; wrong=0;
+  if (!total) return;
+  show("quiz"); nextCard();
+}
+function V(){ return VERBS[+cur]; }
+
+function nextCard(){
+  if (!queue.length) return finish();
+  cur = queue.shift();
+  const v = V();
+  $("qVerb").textContent = v[0];
+  $("qSk").textContent = v[4];
+  $("counter").textContent = (doneCount+1)+" / "+total;
+  $("bar").style.width = (doneCount/total*100)+"%";
+  $("fb").className="hidden"; $("selfGrade").classList.add("hidden"); $("nextArea").classList.add("hidden");
+  $("pickArea").classList.toggle("hidden", S.mode!=="pick");
+  $("flipArea").classList.toggle("hidden", S.mode!=="flip");
+  if (S.mode==="pick") setupPick($("pickArea"), v, (ok, w)=>{
+    showFeedback(ok?"ok":"no", ok ? "Alles richtig! 🎉" : wrongMsg(w));
+    grade(ok);
+    $("nextArea").classList.remove("hidden");
+    setTimeout(()=>$("next").scrollIntoView({behavior:"smooth", block:"end"}), 50);
+  });
+  window.scrollTo(0,0);
+}
+function showFeedback(cls, msg){ const fb=$("fb"); fb.className="feedback "+cls; fb.innerHTML = msg + fullRow(V()); }
 function reveal(){ $("flipArea").classList.add("hidden"); showFeedback("neutral","Die Lösung:"); $("selfGrade").classList.remove("hidden"); }
 
-// ---------- Bewerten (Lernkartei) ----------
 function grade(ok){
   const c = S.cards[cur];
-    if (!c){ if (S.newDay!==today()){S.newDay=today(); S.newToday=0;} S.newToday++; }
+  if (!c){ newLeft(); S.newToday++; }
   let box = c ? c.box : 1;
   if (ok){ if (!extraMode || !c) box = Math.min(MAXBOX, box+1); right++; }
   else { box = 1; wrong++; queue.splice(Math.min(3, queue.length), 0, cur); total++; }
@@ -423,10 +500,247 @@ function renderOverview(){
   $("ovBody").innerHTML=h; $("resetBox").classList.add("hidden"); show("overview");
 }
 
+// =====================================================================
+// ---------- Monster-Labyrinth ----------
+// =====================================================================
+const MAZE = ["###############","#......#......#","#.##.#.#.#.##.#","#.............#","#.##.#####.##.#","#....#...#....#","####.#.#.#.####","#.............#","####.#.#.#.####","#....#...#....#","#.##.......##.#","#..#.#####.#..#","##.#.......#.##","#....#.#.#....#","#.##.#...#.##.#","#.............#","###############"];
+const ROWS = MAZE.length, COLS = MAZE[0].length;
+const PSTART = {x:7, y:15}, HOME = {x:7, y:7};
+const DIRS = {up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0}};
+const DLIST = Object.values(DIRS);
+const MONSTERS = [
+  {emoji:"👻", type:"chase",  name:"Das Gespenst"},
+  {emoji:"👾", type:"ambush", name:"Das Alien"},
+  {emoji:"🐙", type:"random", name:"Die Krake"},
+  {emoji:"🦖", type:"shy",    name:"Der Dino"},
+];
+const isOpen = (x,y) => y>=0 && y<ROWS && x>=0 && x<COLS && MAZE[y][x] !== "#";
+
+const cv = $("cv"), ctx = cv.getContext("2d");
+let G = null, tile = 24, rafId = null, lastT = 0, lastGameVerb = null;
+
+function sizeCanvas(){
+  const w = Math.min(document.querySelector(".app").clientWidth - 32, 480);
+  tile = Math.floor(w / COLS);
+  const W = tile*COLS, H = tile*ROWS, dpr = window.devicePixelRatio || 1;
+  cv.width = W*dpr; cv.height = H*dpr; cv.style.width = W+"px"; cv.style.height = H+"px";
+  $("stage").style.width = W+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function newLevel(level, keep){
+  const dots = new Set();
+  MAZE.forEach((r,y)=>[...r].forEach((ch,x)=>{ if (ch!=="#" && !(x===PSTART.x && y===PSTART.y) && !(y===HOME.y && Math.abs(x-HOME.x)<=1)) dots.add(x+","+y); }));
+  const n = Math.min(MONSTERS.length, level+1);
+  const mspeed = Math.min(3.9, 2.5 * (1 + 0.1*(level-1)));
+  G = {
+    level, dots, paused:true, inv:0, time:0,
+    score: keep ? keep.score : 0, caught: keep ? keep.caught : 0, good: keep ? keep.good : 0,
+    pspeed: 4.3, mspeed,
+    player: {x:PSTART.x, y:PSTART.y, dir:null, want:null},
+    mons: MONSTERS.slice(0,n).map((m,i)=>({...m, x:HOME.x, y:HOME.y, dir:null, wait: 1.5 + i*2.5})),
+  };
+  updateHud();
+}
+
+function updateHud(){
+  if (!G) return;
+  $("hud").textContent = "Level "+G.level+" · ⭐ "+G.score+" · ✓ "+G.good+"/"+G.caught;
+}
+
+// Bewegung von Feldmitte zu Feldmitte
+function moveEntity(e, dist, choose){
+  let guard = 0;
+  while (dist > 1e-6 && guard++ < 6){
+    const atX = Math.abs(e.x - Math.round(e.x)) < 1e-6, atY = Math.abs(e.y - Math.round(e.y)) < 1e-6;
+    if (atX && atY){
+      e.x = Math.round(e.x); e.y = Math.round(e.y);
+      choose(e);
+      if (!e.dir || !isOpen(e.x+e.dir.x, e.y+e.dir.y)){ e.dir = null; return; }
+    }
+    if (!e.dir) return;
+    const tx = e.dir.x ? (e.dir.x>0 ? Math.floor(e.x+1e-6)+1 : Math.ceil(e.x-1e-6)-1) : e.x;
+    const ty = e.dir.y ? (e.dir.y>0 ? Math.floor(e.y+1e-6)+1 : Math.ceil(e.y-1e-6)-1) : e.y;
+    const d = Math.abs(tx-e.x) + Math.abs(ty-e.y);
+    if (dist >= d){ e.x = tx; e.y = ty; dist -= d; }
+    else { e.x += e.dir.x*dist; e.y += e.dir.y*dist; dist = 0; }
+  }
+}
+function choosePlayer(p){
+  if (p.want && isOpen(p.x+p.want.x, p.y+p.want.y)) p.dir = p.want;
+  else if (!(p.dir && isOpen(p.x+p.dir.x, p.y+p.dir.y))) p.dir = null;
+}
+function chooseMonster(m){
+  const p = G.player;
+  let opts = DLIST.filter(d=>isOpen(m.x+d.x, m.y+d.y));
+  if (m.dir && opts.length>1) opts = opts.filter(d=>!(d.x===-m.dir.x && d.y===-m.dir.y));
+  let target = null;
+  const far = Math.hypot(m.x-p.x, m.y-p.y);
+  if (m.type==="chase") target = p;
+  else if (m.type==="ambush") target = {x:p.x+(p.dir?p.dir.x*3:0), y:p.y+(p.dir?p.dir.y*3:0)};
+  else if (m.type==="shy") target = far>4 ? p : null;
+  if (!target || Math.random() < 0.22) { m.dir = opts[Math.floor(Math.random()*opts.length)]; return; }
+  let best = null, bd = Infinity;
+  for (const d of opts){ const dd = (m.x+d.x-target.x)**2 + (m.y+d.y-target.y)**2; if (dd < bd){ bd = dd; best = d; } }
+  m.dir = best;
+}
+
+function update(dt){
+  G.time += dt;
+  if (G.inv > 0) G.inv -= dt;
+  const p = G.player;
+  if (p.want && p.dir && p.want.x===-p.dir.x && p.want.y===-p.dir.y) p.dir = p.want; // sofort umdrehen
+  moveEntity(p, G.pspeed*dt, choosePlayer);
+  const k = Math.round(p.x)+","+Math.round(p.y);
+  if (Math.abs(p.x-Math.round(p.x))<0.3 && Math.abs(p.y-Math.round(p.y))<0.3 && G.dots.delete(k)){ G.score += 10; updateHud(); }
+  if (!G.dots.size) return levelDone();
+  for (const m of G.mons){
+    if (m.wait > 0){ m.wait -= dt; continue; }
+    moveEntity(m, G.mspeed*dt, chooseMonster);
+    if (G.inv <= 0 && Math.hypot(m.x-p.x, m.y-p.y) < 0.7){ caught(m); return; }
+  }
+}
+
+function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function drawEmoji(e, x, y, alpha){
+  ctx.globalAlpha = alpha;
+  ctx.font = Math.floor(tile*0.9)+"px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(e, (x+0.5)*tile, (y+0.55)*tile);
+  ctx.globalAlpha = 1;
+}
+function draw(){
+  if (!G) return;
+  ctx.fillStyle = "#1d2340"; ctx.fillRect(0,0,COLS*tile,ROWS*tile);
+  ctx.fillStyle = "#3a7bd5";
+  for (let y=0;y<ROWS;y++) for (let x=0;x<COLS;x++) if (MAZE[y][x]==="#"){ roundRect(x*tile+1, y*tile+1, tile-2, tile-2, tile*0.25); ctx.fill(); }
+  ctx.fillStyle = "#ffd27a";
+  for (const k of G.dots){ const [x,y] = k.split(",").map(Number); ctx.beginPath(); ctx.arc((x+0.5)*tile, (y+0.5)*tile, Math.max(2, tile*0.12), 0, Math.PI*2); ctx.fill(); }
+  for (const m of G.mons) drawEmoji(m.emoji, m.x, m.y, m.wait>0 ? 0.4 : 1);
+  const blink = G.inv > 0 && Math.floor(G.time*8)%2===0;
+  drawEmoji("😀", G.player.x, G.player.y, blink ? 0.25 : 1);
+}
+function loop(t){
+  rafId = requestAnimationFrame(loop);
+  const dt = Math.min(0.05, lastT ? (t-lastT)/1000 : 0); lastT = t;
+  if (G && !G.paused) update(dt);
+  draw();
+}
+
+function openGame(){
+  show("game");
+  sizeCanvas();
+  newLevel(1);
+  $("ovStart").classList.remove("hidden"); $("ovLevel").classList.add("hidden");
+  lastT = 0; if (!rafId) rafId = requestAnimationFrame(loop);
+}
+function closeGame(){
+  if (rafId) cancelAnimationFrame(rafId); rafId = null;
+  if (TTS) try{ speechSynthesis.cancel(); }catch(e){}
+  $("gq").classList.add("hidden");
+  if (G && G.caught) markToday();
+  G = null; renderStart(); show("start");
+}
+function levelDone(){
+  G.paused = true;
+  if (G.score > (S.best||0)){ S.best = G.score; save(); }
+  $("lvTitle").textContent = "Level "+G.level+" geschafft! 🎉";
+  $("lvText").textContent = "⭐ "+G.score+" Punkte · "+G.good+" von "+G.caught+" Zeitwörtern richtig. Im nächsten Level kommen mehr Monster!";
+  $("ovLevel").classList.remove("hidden");
+  say("Super! Level "+G.level+" geschafft!");
+}
+
+// Welches Zeitwort wird geübt? Zuerst fällige, dann neue, dann die schwächsten
+function pickGameVerb(){
+  const cards = allCards(), t = today();
+  let pool = cards.filter(id=>S.cards[id] && S.cards[id].due<=t);
+  if (!pool.length) pool = cards.filter(id=>!S.cards[id]);
+  if (!pool.length) pool = cards.slice().sort((a,b)=>S.cards[a].box - S.cards[b].box).slice(0,6);
+  if (pool.length>1) pool = pool.filter(id=>id!==lastGameVerb);
+  lastGameVerb = pool[Math.floor(Math.random()*pool.length)];
+  return lastGameVerb;
+}
+function gameGrade(id, ok){
+  const c = S.cards[id], t = today();
+  if (!c){ newLeft(); S.newToday++; }
+  let box = c ? c.box : 1;
+  if (ok){
+    if (c && c.due > t){ markToday(); return; } // noch nicht fällig: Stufe bleibt
+    box = Math.min(MAXBOX, box+1);
+  } else box = 1;
+  S.cards[id] = {box, due: t + INTERVALS[box]};
+  markToday(); save();
+}
+
+let caughtBy = null, gameVerbId = null;
+function caught(m){
+  G.paused = true; caughtBy = m;
+  G.caught++; updateHud();
+  gameVerbId = pickGameVerb();
+  const v = VERBS[+gameVerbId];
+  $("gCaught").textContent = m.emoji+" "+m.name+" hat dich gefangen!";
+  $("gVerb").textContent = v[0];
+  $("gSk").textContent = v[4];
+  $("gFb").className = "hidden";
+  $("gCont").classList.add("hidden");
+  setupPick($("gPick"), v, (ok, w)=>{
+    gameGrade(gameVerbId, ok);
+    if (ok){ G.good++; G.score += 50; }
+    updateHud();
+    const fb = $("gFb");
+    fb.className = "feedback " + (ok ? "ok" : "no");
+    fb.innerHTML = (ok ? "Alles richtig! +50 ⭐" : wrongMsg(w)) + fullRow(v);
+    $("gCont").classList.remove("hidden");
+    setTimeout(()=>$("gCont").scrollIntoView({behavior:"smooth", block:"end"}), 50);
+    sayForms(v);
+  });
+  $("gq").classList.remove("hidden");
+  $("gq").scrollTop = 0;
+  setTimeout(()=>say(v[0]), 250);
+}
+function resumeGame(){
+  if (TTS) try{ speechSynthesis.cancel(); }catch(e){}
+  $("gq").classList.add("hidden");
+  if (caughtBy){ caughtBy.x = HOME.x; caughtBy.y = HOME.y; caughtBy.dir = null; caughtBy.wait = 3; }
+  G.inv = 2.5; G.player.want = null; G.player.dir = null;
+  G.paused = false; lastT = 0;
+}
+
+// Steuerung
+function steer(name){ if (G && DIRS[name]) G.player.want = DIRS[name]; }
+document.querySelectorAll(".dpad button").forEach(b=>{
+  b.addEventListener("pointerdown", e=>{ e.preventDefault(); steer(b.dataset.d); });
+});
+document.addEventListener("keydown", e=>{
+  if ($("game").classList.contains("hidden") || !$("gq").classList.contains("hidden")) return;
+  const map = {ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
+  if (map[e.key]){ e.preventDefault(); steer(map[e.key]); }
+});
+let touch0 = null;
+$("stage").addEventListener("touchstart", e=>{ const t=e.touches[0]; touch0 = {x:t.clientX, y:t.clientY}; }, {passive:true});
+$("stage").addEventListener("touchmove", e=>{
+  if (!touch0) return; e.preventDefault();
+  const t = e.touches[0], dx = t.clientX-touch0.x, dy = t.clientY-touch0.y;
+  if (Math.max(Math.abs(dx),Math.abs(dy)) > 18){
+    steer(Math.abs(dx)>Math.abs(dy) ? (dx>0?"right":"left") : (dy>0?"down":"up"));
+    touch0 = {x:t.clientX, y:t.clientY};
+  }
+}, {passive:false});
+$("stage").addEventListener("touchend", ()=>{ touch0 = null; });
+window.addEventListener("resize", ()=>{ if (G) sizeCanvas(); });
+
+$("openGame").onclick = openGame;
+$("gQuit").onclick = closeGame;
+$("gStart").onclick = ()=>{ say("Los geht's!"); $("ovStart").classList.add("hidden"); G.paused=false; lastT=0; };
+$("gNextLv").onclick = ()=>{ $("ovLevel").classList.add("hidden"); newLevel(G.level+1, G); G.paused=false; lastT=0; };
+$("gCont").onclick = resumeGame;
+$("gSay").onclick = ()=>{ if (gameVerbId!==null) say(VERBS[+gameVerbId][0]); };
+
 // ---------- Knöpfe ----------
 $("go").onclick=()=>startSession(false);
 $("extra").onclick=()=>startSession(true);
 $("reveal").onclick=reveal;
+$("qSay").onclick=()=>{ if (cur!==null) say(V()[0]); };
 $("gYes").onclick=()=>{ grade(true); nextCard(); };
 $("gNo").onclick=()=>{ grade(false); nextCard(); };
 $("next").onclick=nextCard;
