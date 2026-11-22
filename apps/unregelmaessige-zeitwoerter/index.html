@@ -558,7 +558,7 @@ function moveEntity(e, dist, choose){
       choose(e);
       if (!e.dir || !isOpen(e.x+e.dir.x, e.y+e.dir.y)){ e.dir = null; return; }
     }
-    if (!e.dir) return;
+    if (!e.dir){ e.x = Math.round(e.x); e.y = Math.round(e.y); continue; } // nie zwischen Feldern stehen bleiben
     const tx = e.dir.x ? (e.dir.x>0 ? Math.floor(e.x+1e-6)+1 : Math.ceil(e.x-1e-6)-1) : e.x;
     const ty = e.dir.y ? (e.dir.y>0 ? Math.floor(e.y+1e-6)+1 : Math.ceil(e.y-1e-6)-1) : e.y;
     const d = Math.abs(tx-e.x) + Math.abs(ty-e.y);
@@ -702,6 +702,8 @@ function resumeGame(){
   if (TTS) try{ speechSynthesis.cancel(); }catch(e){}
   $("gq").classList.add("hidden");
   if (caughtBy){ caughtBy.x = HOME.x; caughtBy.y = HOME.y; caughtBy.dir = null; caughtBy.wait = 3; }
+  // Spieler auf die nächste Feldmitte setzen – sonst bleibt er zwischen zwei Feldern hängen
+  G.player.x = Math.round(G.player.x); G.player.y = Math.round(G.player.y);
   G.inv = 2.5; G.player.want = null; G.player.dir = null;
   G.paused = false; lastT = 0;
 }
